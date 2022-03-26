@@ -72,6 +72,33 @@ void destroy_config(cfg_obj_t *cfg)
     free(cfg);
 }
 
+int8_t *load_file(const int8_t *filename)
+{
+    int8_t *src = NULL;
+    FILE *fptr = fopen(filename, "r");
+
+    if (!fptr) return NULL;
+
+    if (!fseek(fptr, 0L, SEEK_END))
+    {
+	int64_t bsize = ftell(fptr);
+	if (bsize < 0) return NULL;
+
+	src = malloc(sizeof(int8_t) * (bsize + 1));
+
+	if (fseek(fptr, 0L, SEEK_SET)) return NULL;
+
+	uint64_t len = fread(src, sizeof(int8_t), bsize, fptr);
+	if (ferror(fptr)) return NULL;
+	src[len++] = 0;
+    }
+
+    fclose(fptr);
+    return src;
+}
+
+int parse_configs(cfg_obj_t *cfg){}
+
 int32_t main(int32_t argc, int8_t const **argv)
 {
     //Get path to konjour config
@@ -79,6 +106,11 @@ int32_t main(int32_t argc, int8_t const **argv)
     //Parse config into artifacts
     //Execute compilation on artifacts
     //Deallocate all resources
+
+    if (argc < 2) return -1; //Show help
+
+    cfg_obj_t *cfg = new_config(load_file(argv[2]));
+    if (!cfg->src) return -1; // File error
 
     return 0;
 }
