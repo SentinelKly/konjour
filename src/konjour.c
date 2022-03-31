@@ -1,11 +1,15 @@
 //KONJOUR BUILD SYSTEM V0.1.0
 
+//TODO: replace 'count' -> 'index'
+//TODO: use refs to reduce typing out entire memory location
+//TODO: rebust error handling
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
-#include "cfg_parser.h"
+#include "konjour.h"
 
 #define F_SIZE 10
 

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "cfg_parser.h"
+#include "konjour.h"
 
 static int8_t tokens[4] = {'[', ']', '=', '"'};
 
@@ -66,7 +66,6 @@ void destroy_config(cfg_obj_t *cfg)
 
 uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name)
 {
-	//printf("%s\n", name);
 	for (uint64_t i = 0; i < cfg->count + 1; i++)
 	{
 		if (strcmp(cfg->table[i]->fields[0], name) == 0)
@@ -94,10 +93,16 @@ int32_t lookup_field(artifact_t *art, const int8_t *name)
 	return -1;
 }
 
+uint64_t reset_token(int8_t *tok)
+{
+	memset(tok, 0, CTOK_SIZE);
+	return 0;
+}
+
 int32_t parse_config(cfg_obj_t *cfg)
 {
 	//Token buffer and buffer index
-	int8_t *ctok = malloc(sizeof(int8_t) * 999);
+	int8_t *ctok = malloc(sizeof(int8_t) * CTOK_SIZE);
 	uint64_t tokpos = 0;
 
 	//Artifact and field index
@@ -108,14 +113,15 @@ int32_t parse_config(cfg_obj_t *cfg)
 	mode_t mode = M_NORMAL;
 	int8_t cchar = 0;
 
-	memset(ctok, 0, 999);
+	tokpos = reset_token(ctok);
 
 	for (uint64_t i = 0; cfg->src[i] != '\0'; i++)
 	{   
 		cchar = cfg->src[i];
 
-		printf("artifact %d | field %d: %s -> mode %d: %s\n", artifact, field, cfg->table[artifact]->fields[0], mode, ctok);
-		printf("cchar: %c\n\n", cchar);
+		//debugging output
+		//printf("artifact %d | field %d: %s -> mode %d: %s\n", artifact, field, cfg->table[artifact]->fields[0], mode, ctok);
+		//printf("cchar: %c\n\n", cchar);
 
 		if (mode == M_TEXT && cchar != tokens[T_QUOTES])
 		{
@@ -162,8 +168,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 				artifact = lookup_artifact(cfg, ctok);
 				mode = M_NORMAL;
 
-				tokpos = 0;
-				memset(ctok, 0, 999);
+				tokpos = reset_token(ctok);
 			}
 
 			else
@@ -177,10 +182,9 @@ int32_t parse_config(cfg_obj_t *cfg)
 		{
 			if (mode == M_VAR)
 			{
-				field = lookup_field(cfg->table[artifact], ctok);
-				tokpos = 0;
-				memset(ctok, 0, 999);
 				mode = M_VALUE;
+				field = lookup_field(cfg->table[artifact], ctok);
+				tokpos = reset_token(ctok);
 			}
 
 			else
@@ -195,8 +199,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 			if (mode == M_VALUE)
 			{
 				mode = M_TEXT;
-				tokpos = 0;
-				memset(ctok, 0, 999);
+				tokpos = reset_token(ctok);
 			}
 
 			else if (mode == M_TEXT)
@@ -211,8 +214,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 				}
 
 				mode = M_NORMAL;
-				tokpos = 0;
-				memset(ctok, 0, 999);
+				tokpos = reset_token(ctok);
 			}
 
 			else
@@ -224,10 +226,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 		else if (mode == M_NORMAL && LOWER_ASCII(cchar))
 		{
-			tokpos = 0;
-			memset(ctok, 0, 999);
-
 			mode = M_VAR;
+			tokpos = reset_token(ctok);
 			ctok[0] = cchar;
 			tokpos ++;
 		}

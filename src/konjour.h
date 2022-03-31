@@ -1,9 +1,9 @@
-#ifndef _H_CFG_PARSER_
-#define _H_CFG_PARSER_
+#ifndef _H_KONJOUR_
+#define _H_KONJOUR_
 
 #define LOWER_ASCII(x) (x > 96 && x < 123)
-
 #define F_SIZE 10
+#define CTOK_SIZE 999
 
 typedef enum fields_t
 {
@@ -36,6 +36,7 @@ typedef struct cfg_obj_t
     int8_t *src;
 } cfg_obj_t;
 
+//CFG PARSER
 artifact_t *gen_artifact(const int8_t *name);
 void destroy_artifact(artifact_t *art);
 int32_t lookup_field(artifact_t *art, const int8_t *name);
@@ -44,4 +45,9 @@ cfg_obj_t *new_config(int8_t *src);
 void destroy_config(cfg_obj_t *cfg);
 uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name);
 int32_t parse_config(cfg_obj_t *cfg);
+
+//GCC_BUILDER
+void exec_gcc_build(cfg_obj_t *cfg);
+void exec_artifact_build(artifact_t *art);
+
 #endif
