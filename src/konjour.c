@@ -12,7 +12,7 @@
 int8_t *load_file(const int8_t *filename)
 {
     int8_t *src = NULL;
-    FILE *fptr = fopen(filename, "r");
+    FILE *fptr = fopen(filename, "rb");
 
     if (!fptr) return NULL;
 
@@ -44,10 +44,26 @@ int32_t main(int32_t argc, int8_t const **argv)
 
     if (argc < 2) return -1; //Show help
 
-    cfg_obj_t *cfg = new_config(load_file(argv[2]));
+    cfg_obj_t *cfg = new_config(load_file(argv[1]));
     if (!cfg->src) return -1; // File error
 
-    if (!parse_config(cfg)) return -1;
+    parse_config(cfg);
+
+    for (int32_t i = 0; i < cfg->count + 1; i++)
+    {
+        printf("Artifact: %s\n", cfg->table[i]->fields[0]);
+
+        for (int32_t ii = 0; ii < F_SIZE; ii++)
+        {
+            if (!cfg->table[i]->fields[ii])
+            {
+                printf("%d: null\n", ii);
+                continue;
+            }
+
+            printf("%d: %s\n", ii, cfg->table[i]->fields[ii]);
+        }
+    }
 
     destroy_config(cfg);
     return 0;
