@@ -53,22 +53,29 @@ int32_t main(int32_t argc, int8_t const **argv)
 
     parse_config(cfg);
 
-    for (int32_t i = 0; i < cfg->count + 1; i++)
+    printf("Preparing to build the following artifacts: \n\n");
+
+    for (int32_t i = 1; i < cfg->count + 1; i++)
     {
         printf("Artifact: %s\n", cfg->table[i]->fields[0]);
 
-        for (int32_t ii = 0; ii < F_SIZE; ii++)
+        for (int32_t ii = 1; ii < F_SIZE; ii++)
         {
+            int8_t *fname = get_field_name(ii);
+
             if (!cfg->table[i]->fields[ii])
             {
-                printf("%d: null\n", ii);
+                printf("%s: null\n", fname);
                 continue;
             }
 
-            printf("%d: %s\n", ii, cfg->table[i]->fields[ii]);
+            printf("%s: %s\n", fname, cfg->table[i]->fields[ii]);
         }
+
+        printf("\n");
     }
 
+    gcc_exec_config(cfg);
     destroy_config(cfg);
     return 0;
 }

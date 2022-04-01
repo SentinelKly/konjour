@@ -6,11 +6,11 @@
 #include "konjour.h"
 
 static int8_t tokens[4] = {'[', ']', '=', '"'};
-
+static int8_t binaries[3][10] = {"executable", "shared", "static"};
 static int8_t tok_names[10][8] = 
 {
-	"name", "binary", "out_dir", "inc_dir", "lib_dir", "sources",
-	"libs", "flags", "c_std", "cxx_std"
+	"name", "binary", "out_dir", "inc_dir", "lib_dir", "libs",
+	"sources", "flags", "c_std", "cxx_std"
 };
 
 artifact_t *gen_artifact(const int8_t *name)
@@ -88,6 +88,21 @@ int32_t lookup_field(artifact_t *art, const int8_t *name)
 		{
 			return i;
 		}
+	}
+
+	return -1;
+}
+
+int8_t *get_field_name(int32_t field)
+{
+	return tok_names[field];
+}
+
+int32_t lookup_binary(int8_t *str)
+{
+	for (int32_t i = 0; i < 3; i++)
+	{
+		if (strcmp(str, binaries[i]) == 0) return i;
 	}
 
 	return -1;

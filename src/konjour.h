@@ -9,7 +9,7 @@ typedef enum fields_t
 {
     F_NAME, F_BINARY,
     F_OUT_DIR, F_INC_DIR, F_LIB_DIR,
-    F_SOURCES, F_LIBS, F_FLAGS,
+    F_LIBS, F_SOURCES, F_FLAGS,
     F_C_STD, F_CXX_STD
 } fields_t;
 
@@ -36,10 +36,13 @@ typedef struct cfg_obj_t
     int8_t *src;
 } cfg_obj_t;
 
+
 //CFG PARSER
 artifact_t *gen_artifact(const int8_t *name);
 void destroy_artifact(artifact_t *art);
 int32_t lookup_field(artifact_t *art, const int8_t *name);
+int8_t *get_field_name(int32_t field);
+int32_t lookup_binary(int8_t *str);
 
 cfg_obj_t *new_config(int8_t *src);
 void destroy_config(cfg_obj_t *cfg);
@@ -47,7 +50,7 @@ uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name);
 int32_t parse_config(cfg_obj_t *cfg);
 
 //GCC_BUILDER
-void exec_gcc_build(cfg_obj_t *cfg);
-void exec_artifact_build(artifact_t *art);
+void gcc_exec_config(cfg_obj_t *cfg);
+void gcc_gen_build(artifact_t *art);
 
 #endif
