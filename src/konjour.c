@@ -29,16 +29,16 @@ int8_t *load_file(const int8_t *filename)
 
     if (!fseek(fptr, 0L, SEEK_END))
     {
-	int64_t bsize = ftell(fptr);
-	if (bsize < 0) return NULL;
+	   int64_t bsize = ftell(fptr);
+	   if (bsize < 0) return NULL;
 
-	src = malloc(sizeof(int8_t) * (bsize + 1));
+	   src = malloc(sizeof(int8_t) * (bsize + 1));
 
-	if (fseek(fptr, 0L, SEEK_SET)) return NULL;
+	   if (fseek(fptr, 0L, SEEK_SET)) return NULL;
 
-	uint64_t len = fread(src, sizeof(int8_t), bsize, fptr);
-	if (ferror(fptr)) return NULL;
-	src[len++] = 0;
+	   uint64_t len = fread(src, sizeof(int8_t), bsize, fptr);
+	   if (ferror(fptr)) return NULL;
+	   src[len++] = 0;
     }
 
     fclose(fptr);
