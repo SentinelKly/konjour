@@ -10,6 +10,7 @@
 //TODO: Automatically execute config in same directory
 //TODO: Add 'directives' variable
 //TODO: Prevent rebuilding of unmodified sources
+//TODO: implement 'c_std', 'cxx_std', and 'flags'
 
 #include <stdio.h>
 #include <stdlib.h>
