@@ -1,8 +1,14 @@
-//KONJOUR BUILD SYSTEM V0.1.0
+//KONJOUR BUILD SYSTEM 0.0.1
 
-//TODO: replace 'count' -> 'index'
+//TODO: replace cfg 'count' -> 'index'
 //TODO: use refs to reduce typing out entire memory location
 //TODO: rebust error handling
+//TODO: copy global artifact fields to null child fields
+//TODO: OS specific extensions
+//TODO: Multithreaded compilation
+//TODO: Automatically execute config in same directory
+//TODO: add 'directives' variable
+//TODO: Prevent rebuilding of unmodified sources
 
 #include <stdio.h>
 #include <stdlib.h>
