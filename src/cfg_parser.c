@@ -6,7 +6,7 @@
 #include "konjour.h"
 
 static int8_t tokens[4] = {'[', ']', '=', '"'};
-static int8_t binaries[3][10] = {"executable", "shared", "static"};
+static int8_t binaries[3][11] = {"executable", "shared", "static"};
 static int8_t tok_names[10][8] = 
 {
 	"name", "binary", "out_dir", "inc_dir", "lib_dir", "libs",
