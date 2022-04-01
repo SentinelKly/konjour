@@ -1,2 +1,2 @@
 # konjour
-C/C++ build system
+Very minimal C/C++ build system
