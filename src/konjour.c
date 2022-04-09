@@ -1,6 +1,5 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
-//TODO: Add support for C++ projects
 //TODO: Replace cfg 'count' -> 'index'
 //TODO: Use refs to reduce typing out entire memory location
 //TODO: Rebust error handling
