@@ -41,6 +41,10 @@ void gcc_gen_build(artifact_t *art)
 
 	int32_t bin_type = lookup_binary(art->fields[F_BINARY]);
 
+	int8_t ndir[999] = {0};
+	sprintf(ndir, "mkdir %s", art->fields[F_OUT_DIR]);
+	system(ndir);
+
 	for (fields_t i = 3; i < F_FLAGS; i++)
 	{
 		for (int8_t *stok = strtok(art->fields[i], " "); stok != NULL; stok = strtok(NULL, " "))
@@ -82,7 +86,7 @@ void gcc_gen_build(artifact_t *art)
 	if (bin_type == 0) sprintf(link_exec, "%s %s %s -o %s/%s.exe", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME]);
 	else if (bin_type == 1) sprintf(link_exec, "%s -shared %s %s -o %s/lib%s.so", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME]);
 	else if (bin_type == 2) sprintf(link_exec, "ar rcs %s/lib%s.a %s %s", art->fields[F_OUT_DIR], art->fields[F_NAME], art->fields[F_LIBS], src_list);
-	
+
 	printf("%s\n", link_exec);
 	system(link_exec);
 	cflag = 0;
