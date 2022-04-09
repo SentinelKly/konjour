@@ -14,6 +14,6 @@ Konjour is a very lightweight, portable, and minimal C/C++ build system. Konjour
 
 ## Current Issues
 - [ ] 'Dodgy' code fixes
-- [ ] Non-existant error handling
+- [ ] Non-existent error handling
 - [ ] Can't leave empty fields
 - [ ] Global artifact is not in use
