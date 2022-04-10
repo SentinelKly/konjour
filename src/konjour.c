@@ -18,8 +18,6 @@
 
 #include "konjour.h"
 
-#define F_SIZE 10
-
 int8_t *load_file(const int8_t *filename)
 {
     int8_t *src = NULL;
@@ -53,10 +51,13 @@ int32_t main(int32_t argc, int8_t const **argv)
     //Execute compilation on artifacts
     //Deallocate all resources
 
-    if (argc < 2) return -1; //Show help
+    const int8_t *path = NULL;
 
-    cfg_obj_t *cfg = new_config(load_file(argv[1]));
-    if (!cfg->src) return -1; // File error
+    if (argc < 2) path = "./konjour.cfg";
+    else path = argv[1];
+
+    cfg_obj_t *cfg = new_config(load_file(path));
+    if (!cfg->src) throw_parsing_error(0, 0, (int8_t *) path, E_NULL_FILE);
 
     parse_config(cfg);
 

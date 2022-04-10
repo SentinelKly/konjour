@@ -15,7 +15,9 @@ static const int8_t *errstrings[9] =
 void throw_parsing_error(uint64_t line, uint64_t charpos, uint8_t *token, err_t err)
 {
 	int8_t errmsg[9999] = {0};
-	sprintf(errmsg, errstrings[err], line, charpos, token);
+
+	if (err == 0) sprintf(errmsg, errstrings[err], token);
+	else if (err < 5) sprintf(errmsg, errstrings[err], line, charpos, token);
 	printf(errmsg);
 	exit(err);
 }
