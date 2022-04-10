@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <ctype.h>
 
 #include "konjour.h"
 
@@ -124,6 +125,10 @@ int32_t parse_config(cfg_obj_t *cfg)
 	uint64_t artifact = 0;
 	int32_t field = 0;
 
+	//File positions
+	uint64_t line = 1;
+	uint64_t chars = 0;
+
 	//Parsing mode and current char
 	mode_t mode = M_NORMAL;
 	int8_t cchar = 0;
@@ -133,18 +138,33 @@ int32_t parse_config(cfg_obj_t *cfg)
 	for (uint64_t i = 0; cfg->src[i] != '\0'; i++)
 	{   
 		cchar = cfg->src[i];
+		chars ++;
 
 		//debugging output
 		//printf("artifact %d | field %d: %s -> mode %d: %s\n", artifact, field, cfg->table[artifact]->fields[0], mode, ctok);
 		//printf("cchar: %c\n\n", cchar);
 
-		if (mode == M_TEXT && cchar != tokens[T_QUOTES])
+		if (isalpha(cchar) == 1) cchar = tolower(cchar);
+
+		if (cchar == '\n')
+		{
+			if (mode == M_ARTIFACT) throw_parsing_error(line, chars, "", E_INCOMPLETE_ARTIFACT);
+
+			line ++;
+			chars = 0;
+
+			continue;
+		}
+
+		else if (cchar == '\r' || cchar == '\t') continue;
+
+		else if (mode == M_TEXT && cchar != tokens[T_QUOTES])
 		{
 			ctok[tokpos] = cchar;
 			tokpos ++;
 		}
 
-		else if (cchar == ' ' || cchar == '\t' || cchar == '\r' || cchar == '\n') continue;
+		else if (cchar == ' ') continue;
 
 		else if (mode == M_ARTIFACT && cchar != tokens[T_RIGHT_BRACE])
 		{
@@ -168,8 +188,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 			else
 			{
-				continue;
-				//Throw error
+				//Error: left brace outside of text or artifact scope declaration
+				throw_parsing_error(line, chars, "[", E_UNEXPECTED_TOK);
 			}
 		}
 
@@ -180,6 +200,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 				tokpos ++;
 				ctok[tokpos] = '\0';
 
+				if (!isalpha(ctok[0])) throw_parsing_error(line, chars, "", E_NULL_ARTIFACT);
+
 				artifact = lookup_artifact(cfg, ctok);
 				mode = M_NORMAL;
 
@@ -188,8 +210,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 			else
 			{
-				continue;
-				//throw error
+				//Error: right brace outside of text or artifact scope declaration
+				throw_parsing_error(line, chars, "]", E_UNEXPECTED_TOK);
 			}
 		}
 
@@ -204,8 +226,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 			else
 			{
-				continue;
-				//throw error
+				//Error: equals token outside of field assign
+				throw_parsing_error(line, chars, "=", E_UNEXPECTED_TOK);
 			}
 		}
 
@@ -234,8 +256,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 			else
 			{
-				continue;
-				//throw error;
+				//Error: quotes outside of value start or ending
+				throw_parsing_error(line, chars, "\"", E_UNEXPECTED_TOK);
 			}
 		}
 

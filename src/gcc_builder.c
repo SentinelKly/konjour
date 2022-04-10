@@ -49,6 +49,8 @@ void gcc_gen_build(artifact_t *art)
 	{
 		for (int8_t *stok = strtok(art->fields[i], " "); stok != NULL; stok = strtok(NULL, " "))
 		{
+			if (stok[0] == ' ') continue;
+
 			if (i == F_SOURCES)
 			{
 				int8_t exec[999] = {0};
@@ -58,6 +60,7 @@ void gcc_gen_build(artifact_t *art)
 
 				if (bin_type == 1) sprintf(exec, "%s -c -Wall -Werror -fpic %s -o %s/out%d.o", comp, stok, art->fields[F_OUT_DIR], srcs);
 				else sprintf(exec, "%s -c %s -o %s/out%d.o", comp, stok, art->fields[F_OUT_DIR], srcs);
+
 				printf("%s\n", exec);
 				system(exec);
 				srcs ++;
