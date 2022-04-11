@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <pthread.h>
 
 #include "konjour.h"
 
@@ -21,18 +22,27 @@
 
 static int8_t compilers[2][4] = {"gcc", "g++"};
 static int8_t inserts[3][3] = {"-I", "-L", "-l"};
-static int32_t cflag = 0;
 static int32_t verbose = 0;
 
 void gcc_exec_config(cfg_obj_t *cfg)
 {
+	pthread_t threads[cfg->index];
 	for (uint64_t i = 1; i < cfg->index + 1; i++)
 	{
-		gcc_gen_build(cfg->table[i]);
+		pthread_t thread_id;
+		pthread_create(&threads[i - 1], NULL, gcc_gen_build, (cfg->table[i]));
+		//gcc_gen_build(cfg->table[i]);
 	}
+
+	for (int32_t i = 0; i < cfg->index + 1; i++)
+	{
+		pthread_join(threads[i], NULL);
+	}
+
+	pthread_exit(NULL);
 }
 
-int8_t *set_compiler(int8_t *str)
+int8_t *set_compiler(int32_t *cflag, int8_t *str)
 {
 	int8_t tstr[99] = {0};
 	uint64_t index = 0;
@@ -44,23 +54,26 @@ int8_t *set_compiler(int8_t *str)
 	}
 
 	if (strcmp(tstr, "c") == 0) return compilers[0];
-	else cflag = 1; return compilers[1];
+	else *cflag = 1; return compilers[1];
 }
 
-void gcc_gen_build(artifact_t *art)
+void *gcc_gen_build(void *argpr)
 {
+	artifact_t *art = (artifact_t *) argpr;
+
 	int8_t *buffer = malloc(sizeof(int8_t) * 1);
 	int8_t *comp = compilers[0];
 	uint64_t size = 0;
 	int32_t srcs = 0;
+	int32_t cflag = 0;
 
 	int32_t bin_type = lookup_binary(art->fields[F_BINARY]);
 
 	int8_t ndir[999] = {0};
-	sprintf(ndir, "mkdir %s", art->fields[F_OUT_DIR]);
+	sprintf(ndir, "mkdir %s\\%s", art->fields[F_OUT_DIR], art->fields[F_NAME]);
 	system(ndir);
 
-	printf("\n");
+	//printf("\n");
 
 	for (fields_t i = 3; i < F_FLAGS; i++)
 	{
@@ -74,7 +87,7 @@ void gcc_gen_build(artifact_t *art)
 				int8_t ext[9] = {0};
 				int8_t std[99] = {0};
 
-				comp = set_compiler(stok);
+				comp = set_compiler(&cflag, stok);
 
 				if (strcmp(comp, "gcc") == 0)
 				{
@@ -90,10 +103,10 @@ void gcc_gen_build(artifact_t *art)
 
 				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
 
-				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fpic %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
-				else sprintf(exec, "%s -std=%s -c %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
+				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fpic %s -o %s/%s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
+				else sprintf(exec, "%s -std=%s -c %s -o %s/%s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
 
-				printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
+				//printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
 				if (verbose) printf("%s\n", exec);
 
 				system(exec);
@@ -116,7 +129,7 @@ void gcc_gen_build(artifact_t *art)
 	for (uint64_t i = 0; i < srcs; i++)
 	{
 		int8_t src[999] = {0};
-		sprintf(src, "%s/out%d.o ", art->fields[F_OUT_DIR], i);
+		sprintf(src, "%s/%s/out%d.o ", art->fields[F_OUT_DIR], art->fields[F_NAME], i);
 		strcat(src_list, src);
 	}
 
@@ -128,9 +141,12 @@ void gcc_gen_build(artifact_t *art)
 
 	system(exec);
 	memset(exec, 0, 9999);
-	sprintf(exec, "cd %s & %s *.o", art->fields[F_OUT_DIR], RM_EXEC);
-	system(exec);
+	//sprintf(exec, "cd %s & %s *.o", art->fields[F_OUT_DIR], RM_EXEC);
+	//system(exec);
 
-	printf("Compilation of %s finished!\n\n", art->fields[F_NAME]);
+	printf("Compilation of %s finished!\n", art->fields[F_NAME]);
 	cflag = 0;
+
+	//pthread_exit(NULL);
+	return NULL;
 }

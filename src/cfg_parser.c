@@ -130,7 +130,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 	uint64_t chars = 0;
 
 	//Parsing mode and current char
-	mode_t mode = M_NORMAL;
+	modes_t mode = M_NORMAL;
 	int8_t cchar = 0;
 
 	tokpos = reset_token(ctok);

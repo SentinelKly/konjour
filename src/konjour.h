@@ -15,10 +15,10 @@ typedef enum fields_t
 	F_C_STD, F_CXX_STD, F_BUILD
 } fields_t;
 
-typedef enum mode_t
+typedef enum modes_t
 {
 	M_NORMAL, M_ARTIFACT, M_TEXT, M_VAR, M_VALUE
-} mode_t;
+} modes_t;
 
 typedef enum token_t
 {
@@ -73,8 +73,8 @@ void validate_artifacts(cfg_obj_t *cfg);
 
 //GCC BUILDER
 void gcc_exec_config(cfg_obj_t *cfg);
-int8_t *set_compiler(int8_t *str);
-void gcc_gen_build(artifact_t *art);
+int8_t *set_compiler(int32_t *cflag, int8_t *str);
+void *gcc_gen_build(void *argpr);
 
 //ERROR HANDLER
 void print_artifacts(cfg_obj_t *cfg);
