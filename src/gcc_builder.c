@@ -5,6 +5,17 @@
 
 #include "konjour.h"
 
+#if defined(_WIN64)
+	#define SO_EXT "dll"
+	#define EX_EXT "exe"
+#elif defined(_APPLE_)
+	#define SO_EXT "dylib"
+	#define EX_EXT ""
+#else
+	#define SO_EXT "so"
+	#define EX_EXT ""
+#endif
+
 static int8_t compilers[2][4] = {"gcc", "g++"};
 static int8_t inserts[3][3] = {"-I", "-L", "-l"};
 static int32_t cflag = 0;
@@ -86,8 +97,8 @@ void gcc_gen_build(artifact_t *art)
 		strcat(src_list, src);
 	}
 
-	if (bin_type == 0) sprintf(link_exec, "%s %s %s -o %s/%s.exe", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME]);
-	else if (bin_type == 1) sprintf(link_exec, "%s -shared %s %s -o %s/lib%s.so", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME]);
+	if (bin_type == 0) sprintf(link_exec, "%s %s %s -o %s/%s.%s", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], EX_EXT);
+	else if (bin_type == 1) sprintf(link_exec, "%s -shared %s %s -o %s/lib%s.%s", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
 	else if (bin_type == 2) sprintf(link_exec, "ar rcs %s/lib%s.a %s %s", art->fields[F_OUT_DIR], art->fields[F_NAME], art->fields[F_LIBS], src_list);
 
 	printf("%s\n", link_exec);
