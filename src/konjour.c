@@ -1,12 +1,10 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
-//TODO: Replace cfg 'count' -> 'index'
 //TODO: Use refs to reduce typing out entire memory location
 //TODO: Rebust error handling
 //TODO: Copy global artifact fields to null child fields
 //TODO: OS specific extensions
 //TODO: Multithreaded compilation
-//TODO: Automatically execute config in same directory
 //TODO: Add 'directives' variable
 //TODO: Prevent rebuilding of unmodified sources
 //TODO: implement 'c_std', 'cxx_std', and 'flags'
@@ -61,7 +59,7 @@ int32_t main(int32_t argc, int8_t const **argv)
 
     parse_config(cfg);
 
-    printf("Preparing to build the following artifacts: \n\n");
+    printf("Preparing to summon the following artifacts: \n\n");
 
     for (int32_t i = 1; i < cfg->index + 1; i++)
     {
