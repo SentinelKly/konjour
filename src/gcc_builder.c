@@ -66,11 +66,24 @@ void gcc_gen_build(artifact_t *art)
 			{
 				int8_t exec[999] = {0};
 				int8_t ext[9] = {0};
+				int8_t std[9] = {0};
 
 				comp = set_compiler(stok);
 
-				if (bin_type == 1) sprintf(exec, "%s -c -Wall -Werror -fpic %s -o %s/out%d.o", comp, stok, art->fields[F_OUT_DIR], srcs);
-				else sprintf(exec, "%s -c %s -o %s/out%d.o", comp, stok, art->fields[F_OUT_DIR], srcs);
+				if (strcmp(comp, "gcc") == 0)
+				{
+					strcpy(std, "c");
+					strcat(std, art->fields[F_C_STD]);
+				}
+
+				else
+				{
+					strcpy(std, "c++");
+					strcat(std, art->fields[F_CXX_STD]);
+				}
+
+				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fpic %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
+				else sprintf(exec, "%s -std=%s -c %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
 
 				printf("%s\n", exec);
 				system(exec);
