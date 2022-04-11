@@ -3,7 +3,6 @@
 //TODO: Use refs to reduce typing out entire memory location
 //TODO: Rebust error handling
 //TODO: Copy global artifact fields to null child fields
-//TODO: OS specific extensions
 //TODO: Multithreaded compilation
 //TODO: Add 'directives' variable
 //TODO: Prevent rebuilding of unmodified sources
