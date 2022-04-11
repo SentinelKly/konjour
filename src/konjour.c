@@ -59,28 +59,7 @@ int32_t main(int32_t argc, int8_t const **argv)
     populate_global(cfg);
     parse_config(cfg);
     validate_artifacts(cfg);
-
-    printf("\nPreparing to summon the following artifacts: \n\n");
-
-    for (int32_t i = 0; i < cfg->index + 1; i++)
-    {
-        printf("Artifact: %s\n", cfg->table[i]->fields[0]);
-
-        for (int32_t ii = 1; ii < F_SIZE; ii++)
-        {
-            int8_t *fname = get_field_name(ii);
-
-            if (!cfg->table[i]->fields[ii])
-            {
-                printf("%s: null\n", fname);
-                continue;
-            }
-
-            printf("%s: %s\n", fname, cfg->table[i]->fields[ii]);
-        }
-
-        printf("\n");
-    }
+    print_artifacts(cfg);
 
     gcc_exec_config(cfg);
     destroy_config(cfg);

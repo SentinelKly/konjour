@@ -16,12 +16,39 @@ static const int8_t *errstrings[9] =
 	"VALIDATION ERROR: no compilation artifacts!"
 };
 
+void print_artifacts(cfg_obj_t *cfg)
+{
+	printf("\nPreparing to summon the following artifacts: \n\n");
+
+    for (int32_t i = 1; i < cfg->index + 1; i++)
+    {
+        printf("Artifact: %s\n", cfg->table[i]->fields[0]);
+
+        for (int32_t ii = 1; ii < F_SIZE; ii++)
+        {
+            int8_t *fname = get_field_name(ii);
+
+            if (!cfg->table[i]->fields[ii])
+            {
+                printf("%s: null\n", fname);
+                continue;
+            }
+
+            printf("%s: %s\n", fname, cfg->table[i]->fields[ii]);
+        }
+
+        printf("\n");
+    }
+}
+
 void throw_parsing_error(uint64_t line, uint64_t charpos, uint8_t *token, err_t err)
 {
 	int8_t errmsg[9999] = {0};
 
-	if (err == 0 || err == 7) sprintf(errmsg, errstrings[err], token);
+	if (err == 0) sprintf(errmsg, errstrings[err], token);
 	else if (err < 7) sprintf(errmsg, errstrings[err], line, charpos, token);
+	else if (err < 9) sprintf(errmsg, errstrings[err], token);
+	
 	printf(errmsg);
 	exit(err);
 }

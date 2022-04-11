@@ -249,8 +249,10 @@ int32_t parse_config(cfg_obj_t *cfg)
 					tokpos ++;
 					ctok[tokpos] = '\0';
 
-					cfg->table[artifact]->fields[field] = malloc(sizeof(int8_t) * tokpos);
-					strcpy(cfg->table[artifact]->fields[field], ctok);
+					//cfg->table[artifact]->fields[field] = malloc(sizeof(int8_t) * tokpos);
+					//strcpy(cfg->table[artifact]->fields[field], ctok);
+
+					cfg->table[artifact]->fields[field] = set_heap_str(ctok);
 				}
 
 				mode = M_NORMAL;

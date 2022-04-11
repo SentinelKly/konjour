@@ -77,6 +77,7 @@ int8_t *set_compiler(int8_t *str);
 void gcc_gen_build(artifact_t *art);
 
 //ERROR HANDLER
+void print_artifacts(cfg_obj_t *cfg);
 void throw_parsing_error(uint64_t line, uint64_t charpos, uint8_t *token, err_t err);
 
 #endif
