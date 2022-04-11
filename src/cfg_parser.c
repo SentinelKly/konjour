@@ -144,7 +144,10 @@ int32_t parse_config(cfg_obj_t *cfg)
 		//printf("artifact %d | field %d: %s -> mode %d: %s\n", artifact, field, cfg->table[artifact]->fields[0], mode, ctok);
 		//printf("cchar: %c\n\n", cchar);
 
-		if (isalpha(cchar) == 1) cchar = tolower(cchar);
+		if (isalpha(cchar) == 1 && (mode == M_VAR || mode == M_ARTIFACT || mode == M_NORMAL))
+		{
+			cchar = tolower(cchar);
+		}
 
 		if (cchar == '\n')
 		{
