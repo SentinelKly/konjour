@@ -59,7 +59,7 @@ int32_t main(int32_t argc, int8_t const **argv)
 
     parse_config(cfg);
 
-    printf("Preparing to summon the following artifacts: \n\n");
+    printf("\nPreparing to summon the following artifacts: \n\n");
 
     for (int32_t i = 1; i < cfg->index + 1; i++)
     {
