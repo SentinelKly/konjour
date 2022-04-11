@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "konjour.h"
 
@@ -28,9 +29,8 @@ void print_artifacts(cfg_obj_t *cfg)
         {
             int8_t *fname = get_field_name(ii);
 
-            if (!cfg->table[i]->fields[ii])
+            if (!cfg->table[i]->fields[ii] || !strcmp(cfg->table[i]->fields[ii], " ") || (ii > F_BINARY && ii < F_C_STD))
             {
-                printf("%s: null\n", fname);
                 continue;
             }
 
