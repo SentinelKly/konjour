@@ -19,6 +19,7 @@
 static int8_t compilers[2][4] = {"gcc", "g++"};
 static int8_t inserts[3][3] = {"-I", "-L", "-l"};
 static int32_t cflag = 0;
+static int32_t verbose = 0;
 
 void gcc_exec_config(cfg_obj_t *cfg)
 {
@@ -56,6 +57,8 @@ void gcc_gen_build(artifact_t *art)
 	sprintf(ndir, "mkdir %s", art->fields[F_OUT_DIR]);
 	system(ndir);
 
+	printf("\n");
+
 	for (fields_t i = 3; i < F_FLAGS; i++)
 	{
 		for (int8_t *stok = strtok(art->fields[i], " "); stok != NULL; stok = strtok(NULL, " "))
@@ -85,7 +88,9 @@ void gcc_gen_build(artifact_t *art)
 				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fpic %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
 				else sprintf(exec, "%s -std=%s -c %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
 
-				printf("%s\n", exec);
+				printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
+				if (verbose) printf("%s\n", exec);
+
 				system(exec);
 				srcs ++;
 				continue;
@@ -114,7 +119,10 @@ void gcc_gen_build(artifact_t *art)
 	else if (bin_type == 1) sprintf(link_exec, "%s -shared %s %s -o %s/lib%s.%s", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
 	else if (bin_type == 2) sprintf(link_exec, "ar rcs %s/lib%s.a %s %s", art->fields[F_OUT_DIR], art->fields[F_NAME], art->fields[F_LIBS], src_list);
 
-	printf("%s\n", link_exec);
+	if (verbose) printf("%s\n", link_exec);
+
 	system(link_exec);
+
+	printf("Compilation of %s finished!\n\n", art->fields[F_NAME]);
 	cflag = 0;
 }
