@@ -1,8 +1,6 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
-//TODO: Use refs to reduce typing out entire memory location
 //TODO: Rebust error handling
-//TODO: Copy global artifact fields to null child fields
 //TODO: Multithreaded compilation
 //TODO: Add 'directives' variable
 //TODO: Prevent rebuilding of unmodified sources
