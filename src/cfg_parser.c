@@ -47,7 +47,7 @@ cfg_obj_t *new_config(int8_t *src)
 	cfg_obj_t *cfg = malloc(sizeof(cfg_obj_t));
 	cfg->table = malloc(sizeof(artifact_t*) * 1);
 	cfg->table[0] = gen_artifact("global");
-	cfg->count = 0;
+	cfg->index = 0;
 
 	cfg->src = src;
 
@@ -56,7 +56,7 @@ cfg_obj_t *new_config(int8_t *src)
 
 void destroy_config(cfg_obj_t *cfg)
 {
-	for (uint32_t i; i < cfg->count; i++)
+	for (uint32_t i = 0; i < cfg->index + 1; i++)
 	{
 	   destroy_artifact(cfg->table[i]);
 	}
@@ -67,7 +67,7 @@ void destroy_config(cfg_obj_t *cfg)
 
 uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name)
 {
-	for (uint64_t i = 0; i < cfg->count + 1; i++)
+	for (uint64_t i = 0; i < cfg->index + 1; i++)
 	{
 		if (strcmp(cfg->table[i]->fields[0], name) == 0)
 		{
@@ -75,10 +75,10 @@ uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name)
 		}
 	}
 
-	cfg->count ++;
-	cfg->table = realloc(cfg->table, sizeof(artifact_t*) * (cfg->count + 1));
-	cfg->table[cfg->count] = gen_artifact(name);
-	return cfg->count;
+	cfg->index ++;
+	cfg->table = realloc(cfg->table, sizeof(artifact_t*) * (cfg->index + 1));
+	cfg->table[cfg->index] = gen_artifact(name);
+	return cfg->index;
 }
 
 int32_t lookup_field(artifact_t *art, const int8_t *name)

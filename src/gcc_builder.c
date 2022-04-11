@@ -11,7 +11,7 @@ static int32_t cflag = 0;
 
 void gcc_exec_config(cfg_obj_t *cfg)
 {
-	for (uint64_t i = 1; i < cfg->count + 1; i++)
+	for (uint64_t i = 1; i < cfg->index + 1; i++)
 	{
 		gcc_gen_build(cfg->table[i]);
 	}

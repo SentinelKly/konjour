@@ -49,7 +49,7 @@ typedef struct artifact_t
 typedef struct cfg_obj_t
 {
 	artifact_t **table;
-	int32_t count;
+	int32_t index;
 	int8_t *src;
 } cfg_obj_t;
 

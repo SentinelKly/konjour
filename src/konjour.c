@@ -63,7 +63,7 @@ int32_t main(int32_t argc, int8_t const **argv)
 
     printf("Preparing to build the following artifacts: \n\n");
 
-    for (int32_t i = 1; i < cfg->count + 1; i++)
+    for (int32_t i = 1; i < cfg->index + 1; i++)
     {
         printf("Artifact: %s\n", cfg->table[i]->fields[0]);
 
