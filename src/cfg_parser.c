@@ -8,10 +8,10 @@
 
 static int8_t tokens[4] = {'[', ']', '=', '"'};
 static int8_t binaries[3][11] = {"executable", "shared", "static"};
-static int8_t tok_names[10][8] = 
+static int8_t tok_names[11][8] = 
 {
 	"name", "binary", "out_dir", "inc_dir", "lib_dir", "libs",
-	"sources", "flags", "c_std", "cxx_std"
+	"sources", "flags", "c_std", "cxx_std", "build"
 };
 
 artifact_t *gen_artifact(const int8_t *name)
@@ -312,6 +312,9 @@ void populate_global(cfg_obj_t *cfg)
 				global->fields[F_CXX_STD] = set_heap_str("14");
 				break;
 
+			case F_BUILD:
+				global->fields[F_BUILD] = set_heap_str("debug");
+
 			case F_SOURCES: break;
 
 			default: 
@@ -323,7 +326,6 @@ void populate_global(cfg_obj_t *cfg)
 
 void validate_artifacts(cfg_obj_t *cfg)
 {
-
 	if (cfg->index < 1) throw_parsing_error(0, 0, NULL, E_NO_ARTIFACTS);
 
 	for (uint64_t i = 1; i < cfg->index + 1; i++)
@@ -338,6 +340,14 @@ void validate_artifacts(cfg_obj_t *cfg)
 
 				if (cfg->table[0]->fields[ii]) art->fields[ii] = set_heap_str(cfg->table[0]->fields[ii]);
 				else art->fields[ii] = set_heap_str(" ");
+			}
+
+			if (ii == F_BUILD)
+			{
+				if (strcmp(art->fields[F_BUILD], "debug") && strcmp(art->fields[F_BUILD], "release"))
+				{
+					throw_parsing_error(0, 0, art->fields[F_BUILD], E_INVALID_BUILD);
+				}
 			}
 		}
 	}

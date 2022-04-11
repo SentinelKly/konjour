@@ -4,7 +4,7 @@
 
 #include "konjour.h"
 
-static const int8_t *errstrings[9] = 
+static const int8_t *errstrings[10] = 
 {
 	"FILE IO ERROR: '%s' is not a valid config path!",
 	"PARSE ERROR: (%d:%d) -> unexpected token '%s'.",
@@ -14,7 +14,8 @@ static const int8_t *errstrings[9] =
 	"",
 	"",
 	"VALIDATION ERROR: artifact '%s' has no sources!",
-	"VALIDATION ERROR: no compilation artifacts!"
+	"VALIDATION ERROR: no compilation artifacts!",
+	"VALIDATION ERROR: '%s' is not a valid build type!"
 };
 
 void print_artifacts(cfg_obj_t *cfg)
@@ -47,7 +48,7 @@ void throw_parsing_error(uint64_t line, uint64_t charpos, uint8_t *token, err_t 
 
 	if (err == 0) sprintf(errmsg, errstrings[err], token);
 	else if (err < 7) sprintf(errmsg, errstrings[err], line, charpos, token);
-	else if (err < 9) sprintf(errmsg, errstrings[err], token);
+	else if (err < 10) sprintf(errmsg, errstrings[err], token);
 	
 	printf(errmsg);
 	exit(err);

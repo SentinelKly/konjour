@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define LOWER_ASCII(x) (x > 96 && x < 123)
-#define F_SIZE 10
+#define F_SIZE 11
 #define CTOK_SIZE 999
 
 typedef enum fields_t
@@ -12,7 +12,7 @@ typedef enum fields_t
 	F_NAME, F_BINARY,
 	F_OUT_DIR, F_INC_DIR, F_LIB_DIR,
 	F_LIBS, F_SOURCES, F_FLAGS,
-	F_C_STD, F_CXX_STD
+	F_C_STD, F_CXX_STD, F_BUILD
 } fields_t;
 
 typedef enum mode_t
@@ -36,7 +36,7 @@ typedef enum err_t
 	E_NULL_FIELD, E_INVALID_VALUE, 
 
 	//Validation errors
-	E_NO_SOURCES, E_NO_ARTIFACTS
+	E_NO_SOURCES, E_NO_ARTIFACTS, E_INVALID_BUILD
 } err_t;
 
 typedef struct err_handler_t

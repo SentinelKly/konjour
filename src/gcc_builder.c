@@ -8,12 +8,15 @@
 #if defined(_WIN64)
 	#define SO_EXT "dll"
 	#define EX_EXT "exe"
+	#define RM_EXEC "del"
 #elif defined(_APPLE_)
 	#define SO_EXT "dylib"
 	#define EX_EXT ""
+	#define RM_EXEC "rm"
 #else
 	#define SO_EXT "so"
 	#define EX_EXT ""
+	#define RM_EXEC "rm"
 #endif
 
 static int8_t compilers[2][4] = {"gcc", "g++"};
@@ -69,7 +72,7 @@ void gcc_gen_build(artifact_t *art)
 			{
 				int8_t exec[999] = {0};
 				int8_t ext[9] = {0};
-				int8_t std[9] = {0};
+				int8_t std[99] = {0};
 
 				comp = set_compiler(stok);
 
@@ -84,6 +87,8 @@ void gcc_gen_build(artifact_t *art)
 					strcpy(std, "c++");
 					strcat(std, art->fields[F_CXX_STD]);
 				}
+
+				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
 
 				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fpic %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
 				else sprintf(exec, "%s -std=%s -c %s -o %s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], srcs);
@@ -105,7 +110,7 @@ void gcc_gen_build(artifact_t *art)
 		}
 	}
 
-	int8_t link_exec[9999] = {0};
+	int8_t exec[9999] = {0};
 	int8_t src_list[999] = {0};
 
 	for (uint64_t i = 0; i < srcs; i++)
@@ -115,13 +120,16 @@ void gcc_gen_build(artifact_t *art)
 		strcat(src_list, src);
 	}
 
-	if (bin_type == 0) sprintf(link_exec, "%s %s %s -o %s/%s.%s", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], EX_EXT);
-	else if (bin_type == 1) sprintf(link_exec, "%s -shared %s %s -o %s/lib%s.%s", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
-	else if (bin_type == 2) sprintf(link_exec, "ar rcs %s/lib%s.a %s %s", art->fields[F_OUT_DIR], art->fields[F_NAME], art->fields[F_LIBS], src_list);
+	if (bin_type == 0) sprintf(exec, "%s %s %s -o %s/%s.%s", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], EX_EXT);
+	else if (bin_type == 1) sprintf(exec, "%s -shared %s %s -o %s/lib%s.%s", compilers[cflag], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
+	else if (bin_type == 2) sprintf(exec, "ar rcs %s/lib%s.a %s %s", art->fields[F_OUT_DIR], art->fields[F_NAME], art->fields[F_LIBS], src_list);
 
-	if (verbose) printf("%s\n", link_exec);
+	if (verbose) printf("%s\n", exec);
 
-	system(link_exec);
+	system(exec);
+	memset(exec, 0, 9999);
+	sprintf(exec, "cd %s & %s *.o", art->fields[F_OUT_DIR], RM_EXEC);
+	system(exec);
 
 	printf("Compilation of %s finished!\n\n", art->fields[F_NAME]);
 	cflag = 0;
