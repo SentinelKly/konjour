@@ -275,3 +275,68 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 	free(ctok);
 }
+
+int8_t *set_heap_str(int8_t *str)
+{
+	int8_t *hstr = NULL;
+
+	hstr = malloc(sizeof(int8_t) * strlen(str));
+	strcpy(hstr, str);
+
+	return hstr;
+}
+
+void populate_global(cfg_obj_t *cfg)
+{
+	artifact_t *global = cfg->table[0];
+
+	for (int32_t i = 1; i < F_SIZE; i++)
+	{
+		switch (i)
+		{
+			case F_BINARY: 
+				global->fields[F_BINARY] = set_heap_str("executable");
+				break;
+
+			case F_OUT_DIR:
+				global->fields[F_OUT_DIR] = set_heap_str("out");
+				break;
+
+			case F_C_STD:
+				global->fields[F_C_STD] = set_heap_str("11");
+				break;
+
+			case F_CXX_STD:
+				global->fields[F_CXX_STD] = set_heap_str("14");
+				break;
+
+			case F_SOURCES: break;
+
+			default: 
+				break;
+		}
+
+	}
+}
+
+void validate_artifacts(cfg_obj_t *cfg)
+{
+
+	if (cfg->index < 1) throw_parsing_error(0, 0, NULL, E_NO_ARTIFACTS);
+
+	for (uint64_t i = 1; i < cfg->index + 1; i++)
+	{
+		artifact_t *art = cfg->table[i];
+
+		for (int32_t ii = 1; ii < F_SIZE; ii++)
+		{
+			if (!art->fields[ii])
+			{
+				if (ii == F_SOURCES) throw_parsing_error(0, 0, art->fields[0], E_NO_SOURCES);
+
+				if (cfg->table[0]->fields[ii]) art->fields[ii] = set_heap_str(cfg->table[0]->fields[ii]);
+				else art->fields[ii] = set_heap_str(" ");
+			}
+		}
+	}
+}

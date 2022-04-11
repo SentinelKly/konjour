@@ -6,7 +6,7 @@
 //TODO: Multithreaded compilation
 //TODO: Add 'directives' variable
 //TODO: Prevent rebuilding of unmodified sources
-//TODO: implement 'c_std', 'cxx_std', and 'flags'
+//TODO: implement 'flags'
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,11 +56,13 @@ int32_t main(int32_t argc, int8_t const **argv)
     cfg_obj_t *cfg = new_config(load_file(path));
     if (!cfg->src) throw_parsing_error(0, 0, (int8_t *) path, E_NULL_FILE);
 
+    populate_global(cfg);
     parse_config(cfg);
+    validate_artifacts(cfg);
 
     printf("\nPreparing to summon the following artifacts: \n\n");
 
-    for (int32_t i = 1; i < cfg->index + 1; i++)
+    for (int32_t i = 0; i < cfg->index + 1; i++)
     {
         printf("Artifact: %s\n", cfg->table[i]->fields[0]);
 

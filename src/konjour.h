@@ -33,7 +33,10 @@ typedef enum err_t
 
 	//Parsing errors
 	E_UNEXPECTED_TOK, E_NULL_ARTIFACT, E_INCOMPLETE_ARTIFACT, E_INVALID_FIELD, 
-	E_NULL_FIELD, E_INVALID_VALUE, E_NO_SOURCES
+	E_NULL_FIELD, E_INVALID_VALUE, 
+
+	//Validation errors
+	E_NO_SOURCES, E_NO_ARTIFACTS
 } err_t;
 
 typedef struct err_handler_t
@@ -60,11 +63,13 @@ void destroy_artifact(artifact_t *art);
 int32_t lookup_field(artifact_t *art, const int8_t *name);
 int8_t *get_field_name(int32_t field);
 int32_t lookup_binary(int8_t *str);
-
 cfg_obj_t *new_config(int8_t *src);
 void destroy_config(cfg_obj_t *cfg);
 uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name);
 int32_t parse_config(cfg_obj_t *cfg);
+void populate_global(cfg_obj_t *cfg);
+int8_t *set_heap_str(int8_t *str);
+void validate_artifacts(cfg_obj_t *cfg);
 
 //GCC BUILDER
 void gcc_exec_config(cfg_obj_t *cfg);
