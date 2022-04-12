@@ -4,15 +4,15 @@
 #include <stdint.h>
 
 #define LOWER_ASCII(x) (x > 96 && x < 123)
-#define F_SIZE 12
+#define F_SIZE 13
 #define CTOK_SIZE 999
 
 typedef enum fields_t
 {
 	F_NAME, F_BINARY,
 	F_OUT_DIR, F_INC_DIR, F_LIB_DIR,
-	F_LIBS, F_DEFINES, F_SOURCES, F_FLAGS,
-	F_C_STD, F_CXX_STD, F_BUILD
+	F_LIBS, F_DEFINES, F_SOURCES, F_CFLAGS,
+	F_LFLAGS, F_C_STD, F_CXX_STD, F_BUILD
 } fields_t;
 
 typedef enum modes_t

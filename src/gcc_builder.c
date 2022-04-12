@@ -75,7 +75,7 @@ void *gcc_gen_build(void *argpr)
 	sprintf(ndir, "mkdir %s%s%s", art->fields[F_OUT_DIR], DIR_SEP, art->fields[F_NAME]);
 	system(ndir);
 
-	for (fields_t i = 3; i < F_FLAGS; i++)
+	for (fields_t i = 3; i < F_CFLAGS; i++)
 	{
 		for (int8_t *stok = strtok(art->fields[i], " "); stok != NULL; stok = strtok(NULL, " "))
 		{
@@ -104,8 +104,8 @@ void *gcc_gen_build(void *argpr)
 				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
 				else strcat(std, " -g");
 
-				if (bin_type == 1) sprintf(exec, "%s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
-				else sprintf(exec, "%s %s -std=%s -c %s -o %s/%s/out%d.o", comp, inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
+				if (bin_type == 1) sprintf(exec, "%s %s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, art->fields[F_CFLAGS], inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
+				else sprintf(exec, "%s %s %s -std=%s -c %s -o %s/%s/out%d.o", comp, art->fields[F_CFLAGS], inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
 
 				//printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
 				if (verbose) printf("%s\n", exec);
@@ -146,8 +146,8 @@ void *gcc_gen_build(void *argpr)
 		strcat(src_list, src);
 	}
 
-	if (bin_type == 0) sprintf(exec, "%s %s %s %s -o %s/%s.%s", compilers[cflag], art->fields[F_FLAGS], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], EX_EXT);
-	else if (bin_type == 1) sprintf(exec, "%s %s -shared %s %s -o %s/lib%s.%s", compilers[cflag], art->fields[F_FLAGS], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
+	if (bin_type == 0) sprintf(exec, "%s %s %s %s -o %s/%s.%s", compilers[cflag], art->fields[F_LFLAGS], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], EX_EXT);
+	else if (bin_type == 1) sprintf(exec, "%s %s -shared %s %s -o %s/lib%s.%s", compilers[cflag], art->fields[F_LFLAGS], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
 	else if (bin_type == 2) sprintf(exec, "ar rcs %s/lib%s.a %s %s", art->fields[F_OUT_DIR], art->fields[F_NAME], art->fields[F_LIBS], src_list);
 
 	if (verbose) printf("%s\n", exec);
