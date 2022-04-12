@@ -99,9 +99,10 @@ void *gcc_gen_build(void *argpr)
 					strcat(std, art->fields[F_CXX_STD]);
 				}
 
-				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
+				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, "-Wpedantic -O2 -s");
+				else strcat(std, " -g");
 
-				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fpic %s -o %s/%s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
+				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
 				else sprintf(exec, "%s -std=%s -c %s -o %s/%s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
 
 				//printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
