@@ -38,8 +38,6 @@ void gcc_exec_config(cfg_obj_t *cfg)
 	{
 		pthread_join(threads[i], NULL);
 	}
-
-	pthread_exit(NULL);
 }
 
 int8_t *set_compiler(int32_t *cflag, int8_t *str)
@@ -147,6 +145,6 @@ void *gcc_gen_build(void *argpr)
 	printf("Compilation of %s finished!\n", art->fields[F_NAME]);
 	cflag = 0;
 
-	//pthread_exit(NULL);
+	pthread_exit(NULL);
 	return NULL;
 }
