@@ -1,9 +1,7 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
-//TODO: Multithreaded compilation
 //TODO: Add 'directives' variable
 //TODO: Prevent rebuilding of unmodified sources
-//TODO: implement 'flags'
 
 #include <stdio.h>
 #include <stdlib.h>
