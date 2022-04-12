@@ -8,10 +8,10 @@
 
 static int8_t tokens[4] = {'[', ']', '=', '"'};
 static int8_t binaries[3][11] = {"executable", "shared", "static"};
-static int8_t tok_names[11][8] = 
+static int8_t tok_names[12][8] = 
 {
 	"name", "binary", "out_dir", "inc_dir", "lib_dir", "libs",
-	"sources", "flags", "c_std", "cxx_std", "build"
+	"defines", "sources", "flags", "c_std", "cxx_std", "build"
 };
 
 artifact_t *gen_artifact(const int8_t *name)

@@ -24,7 +24,7 @@
 #endif
 
 static int8_t compilers[2][4] = {"gcc", "g++"};
-static int8_t inserts[3][3] = {"-I", "-L", "-l"};
+static int8_t inserts[4][3] = {"-I", "-L", "-l", "-D"};
 static int32_t verbose = 0;
 
 void gcc_exec_config(cfg_obj_t *cfg)
@@ -67,6 +67,8 @@ void *gcc_gen_build(void *argpr)
 	int32_t srcs = 0;
 	int32_t cflag = 0;
 
+	int8_t inc_defs[9999] = {0};
+
 	int32_t bin_type = lookup_binary(art->fields[F_BINARY]);
 
 	int8_t ndir[999] = {0};
@@ -99,17 +101,29 @@ void *gcc_gen_build(void *argpr)
 					strcat(std, art->fields[F_CXX_STD]);
 				}
 
-				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, "-Wpedantic -O2 -s");
+				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
 				else strcat(std, " -g");
 
-				if (bin_type == 1) sprintf(exec, "%s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
-				else sprintf(exec, "%s -std=%s -c %s -o %s/%s/out%d.o", comp, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
+				if (bin_type == 1) sprintf(exec, "%s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
+				else sprintf(exec, "%s %s -std=%s -c %s -o %s/%s/out%d.o", comp, inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
 
 				//printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
 				if (verbose) printf("%s\n", exec);
 
 				system(exec);
 				srcs ++;
+				continue;
+			}
+
+			if (i == F_INC_DIR || i == F_DEFINES)
+			{
+				int8_t inter[999] = {0};
+
+				if (i == F_INC_DIR) sprintf(inter, "%s%s ", inserts[i - 3], stok);
+				else sprintf(inter, "%s %s ", inserts[i - 3], stok);
+
+				if (!inc_defs) strcpy(inc_defs, inter);
+				else strcat(inc_defs, inter);
 				continue;
 			}
 
