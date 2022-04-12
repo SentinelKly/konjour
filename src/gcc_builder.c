@@ -89,7 +89,7 @@ void *gcc_gen_build(void *argpr)
 
 				comp = set_compiler(&cflag, stok);
 
-				if (strcmp(comp, "gcc") == 0)
+				if (!strcmp(comp, "gcc"))
 				{
 					strcpy(std, "c");
 					strcat(std, art->fields[F_C_STD]);

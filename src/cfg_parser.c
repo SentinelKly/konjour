@@ -265,11 +265,9 @@ int32_t parse_config(cfg_obj_t *cfg)
 				tokpos = reset_token(ctok);
 			}
 
+			//Error: quotes outside of value start or ending
 			else
-			{
-				//Error: quotes outside of value start or ending
 				add_err_handler(E_UNEXPECTED_TOK, line, chars, "\"");
-			}
 		}
 
 		else if (mode == M_NORMAL && LOWER_ASCII(cchar))
@@ -321,6 +319,7 @@ void populate_global(cfg_obj_t *cfg)
 
 			case F_BUILD:
 				global->fields[F_BUILD] = set_heap_str("debug");
+				break;
 
 			case F_SOURCES: break;
 
