@@ -10,14 +10,17 @@
 	#define SO_EXT "dll"
 	#define EX_EXT "exe"
 	#define RM_EXEC "del"
+	#define DIR_SEP "\\"
 #elif defined(_APPLE_)
 	#define SO_EXT "dylib"
 	#define EX_EXT ""
 	#define RM_EXEC "rm"
+	#define DIR_SEP "/"
 #else
 	#define SO_EXT "so"
 	#define EX_EXT ""
 	#define RM_EXEC "rm"
+	#define DIR_SEP "/"
 #endif
 
 static int8_t compilers[2][4] = {"gcc", "g++"};
@@ -67,7 +70,7 @@ void *gcc_gen_build(void *argpr)
 	int32_t bin_type = lookup_binary(art->fields[F_BINARY]);
 
 	int8_t ndir[999] = {0};
-	sprintf(ndir, "mkdir %s\\%s", art->fields[F_OUT_DIR], art->fields[F_NAME]);
+	sprintf(ndir, "mkdir %s%s%s", art->fields[F_OUT_DIR], DIR_SEP, art->fields[F_NAME]);
 	system(ndir);
 
 	for (fields_t i = 3; i < F_FLAGS; i++)
