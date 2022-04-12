@@ -56,7 +56,6 @@ void query_err_handles()
 	}
 
 	if (err_count) exit(-1);
-	else err_count = 0;
 }
 
 void print_artifacts(cfg_obj_t *cfg)
