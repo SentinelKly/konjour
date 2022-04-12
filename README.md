@@ -5,11 +5,9 @@ Konjour is a very lightweight, portable, and minimal C/C++ build system. Konjour
 
 ## Beta Roadmap
 - [X] Multithreaded processing
-- [ ] Inclusion of secondary konjour builds
 - [ ] Interoperability with Cmake projects
 - [X] Verbose error handling
 - [X] Distinction between debug and release modes
-- [ ] Addition of custom variables
 
 ## Current Issues
 - [ ] 'Dodgy' code fixes
