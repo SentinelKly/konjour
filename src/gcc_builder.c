@@ -31,7 +31,6 @@ void gcc_exec_config(cfg_obj_t *cfg)
 	{
 		pthread_t thread_id;
 		pthread_create(&threads[i - 1], NULL, gcc_gen_build, (cfg->table[i]));
-		//gcc_gen_build(cfg->table[i]);
 	}
 
 	for (int32_t i = 0; i < cfg->index + 1; i++)
@@ -70,8 +69,6 @@ void *gcc_gen_build(void *argpr)
 	int8_t ndir[999] = {0};
 	sprintf(ndir, "mkdir %s\\%s", art->fields[F_OUT_DIR], art->fields[F_NAME]);
 	system(ndir);
-
-	//printf("\n");
 
 	for (fields_t i = 3; i < F_FLAGS; i++)
 	{
