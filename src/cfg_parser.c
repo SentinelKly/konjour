@@ -50,7 +50,6 @@ cfg_obj_t *new_config(int8_t *src)
 	cfg->index = 0;
 
 	cfg->src = src;
-
 	return cfg;
 }
 
@@ -69,10 +68,8 @@ uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name)
 {
 	for (uint64_t i = 0; i < cfg->index + 1; i++)
 	{
-		if (strcmp(cfg->table[i]->fields[0], name) == 0)
-		{
+		if (!strcmp(cfg->table[i]->fields[0], name))
 			return i; 
-		}
 	}
 
 	cfg->index ++;
@@ -85,10 +82,7 @@ int32_t lookup_field(artifact_t *art, const int8_t *name)
 {
 	for (int32_t i = 0; i < F_SIZE; i++)
 	{
-		if (strcmp(tok_names[i], name) == 0)
-		{
-			return i;
-		}
+		if (!strcmp(tok_names[i], name)) return i;
 	}
 
 	return -1;
@@ -103,7 +97,7 @@ int32_t lookup_binary(int8_t *str)
 {
 	for (int32_t i = 0; i < 3; i++)
 	{
-		if (strcmp(str, binaries[i]) == 0) return i;
+		if (!strcmp(str, binaries[i])) return i;
 	}
 
 	return -1;
@@ -151,12 +145,11 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 		if (cchar == '\n')
 		{
-			if (mode == M_ARTIFACT) throw_parsing_error(line, chars, "", E_INCOMPLETE_ARTIFACT);
+			//Error: line ended without artifact declaration terminator
+			if (mode == M_ARTIFACT) add_err_handler(E_INCOMPLETE_ARTIFACT, line, chars, NULL);
 
 			line ++;
 			chars = 0;
-
-			continue;
 		}
 
 		else if (cchar == '\r' || cchar == '\t') continue;
@@ -173,6 +166,9 @@ int32_t parse_config(cfg_obj_t *cfg)
 		{
 			ctok[tokpos] = cchar;
 			tokpos ++;
+
+			//Error: artifact name begins with non alphabetic character
+			if (!isalpha(ctok[0])) add_err_handler(E_NULL_ARTIFACT, line, chars, NULL);
 		}
 
 		else if (mode == M_VAR && cchar != tokens[T_EQUALS])
@@ -186,13 +182,13 @@ int32_t parse_config(cfg_obj_t *cfg)
 			if (mode == M_NORMAL)
 			{
 				mode = M_ARTIFACT;
-				continue;
+				tokpos = reset_token(ctok);
 			}
 
 			else
 			{
 				//Error: left brace outside of text or artifact scope declaration
-				throw_parsing_error(line, chars, "[", E_UNEXPECTED_TOK);
+				add_err_handler(E_UNEXPECTED_TOK, line, chars, "[");
 			}
 		}
 
@@ -200,21 +196,27 @@ int32_t parse_config(cfg_obj_t *cfg)
 		{
 			if (mode == M_ARTIFACT)
 			{
-				tokpos ++;
-				ctok[tokpos] = '\0';
+				//Error: Artifact declaration ended without a valid name
+				if (!tokpos || !strcmp(ctok, "")) 
+				{
+					add_err_handler(E_NULL_ARTIFACT, line, chars, NULL);
+				}
 
-				if (!isalpha(ctok[0])) throw_parsing_error(line, chars, "", E_NULL_ARTIFACT);
+				else 
+				{
+					tokpos ++;
+					ctok[tokpos] = '\0';
+					artifact = lookup_artifact(cfg, ctok);
+				}
 
-				artifact = lookup_artifact(cfg, ctok);
 				mode = M_NORMAL;
-
 				tokpos = reset_token(ctok);
 			}
 
 			else
 			{
 				//Error: right brace outside of text or artifact scope declaration
-				throw_parsing_error(line, chars, "]", E_UNEXPECTED_TOK);
+				add_err_handler(E_UNEXPECTED_TOK, line, chars, "]");
 			}
 		}
 
@@ -224,13 +226,17 @@ int32_t parse_config(cfg_obj_t *cfg)
 			{
 				mode = M_VALUE;
 				field = lookup_field(cfg->table[artifact], ctok);
+
+				//Error: field lookup yielded no valid results
+				if (field == -1) add_err_handler(E_INVALID_FIELD, line, chars - 1, ctok);
+
 				tokpos = reset_token(ctok);
 			}
 
 			else
 			{
 				//Error: equals token outside of field assign
-				throw_parsing_error(line, chars, "=", E_UNEXPECTED_TOK);
+				add_err_handler(E_UNEXPECTED_TOK, line, chars, "=");
 			}
 		}
 
@@ -262,7 +268,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 			else
 			{
 				//Error: quotes outside of value start or ending
-				throw_parsing_error(line, chars, "\"", E_UNEXPECTED_TOK);
+				add_err_handler(E_UNEXPECTED_TOK, line, chars, "\"");
 			}
 		}
 
@@ -280,6 +286,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 int8_t *set_heap_str(int8_t *str)
 {
+	if (!str) return NULL;
 	int8_t *hstr = NULL;
 
 	hstr = malloc(sizeof(int8_t) * strlen(str));
@@ -326,7 +333,8 @@ void populate_global(cfg_obj_t *cfg)
 
 void validate_artifacts(cfg_obj_t *cfg)
 {
-	if (cfg->index < 1) throw_parsing_error(0, 0, NULL, E_NO_ARTIFACTS);
+	//Error: config file has no valid artifacts
+	if (cfg->index < 1) add_err_handler(E_NO_ARTIFACTS, 0, 0, NULL);
 
 	for (uint64_t i = 1; i < cfg->index + 1; i++)
 	{
@@ -336,18 +344,28 @@ void validate_artifacts(cfg_obj_t *cfg)
 		{
 			if (!art->fields[ii])
 			{
-				if (ii == F_SOURCES) throw_parsing_error(0, 0, art->fields[0], E_NO_SOURCES);
+				//Error: Artifact has no sources present
+				if (ii == F_SOURCES) add_err_handler(E_NO_SOURCES, 0, 0, art->fields[0]);
 
 				if (cfg->table[0]->fields[ii]) art->fields[ii] = set_heap_str(cfg->table[0]->fields[ii]);
 				else art->fields[ii] = set_heap_str(" ");
 			}
 
-			if (ii == F_BUILD)
+			switch (ii)
 			{
-				if (strcmp(art->fields[F_BUILD], "debug") && strcmp(art->fields[F_BUILD], "release"))
-				{
-					throw_parsing_error(0, 0, art->fields[F_BUILD], E_INVALID_BUILD);
-				}
+				case F_BINARY:
+
+					//Error: Artifact binary is of invalid type
+					if (strcmp(art->fields[F_BINARY], binaries[0]) && strcmp(art->fields[F_BINARY], binaries[1]) && strcmp(art->fields[F_BINARY], binaries[2]))
+						add_err_handler(E_INVALID_BINARY, 0, 0, art->fields[F_BINARY]);
+					break;
+
+				case F_BUILD:
+
+					//Error: Artifact build is of invalid type
+					if (strcmp(art->fields[F_BUILD], "debug") && strcmp(art->fields[F_BUILD], "release"))
+						add_err_handler(E_INVALID_BUILD, 0, 0, art->fields[F_BUILD]);
+					break;
 			}
 		}
 	}

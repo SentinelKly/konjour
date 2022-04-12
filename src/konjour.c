@@ -50,11 +50,14 @@ int32_t main(int32_t argc, int8_t const **argv)
     else path = argv[1];
 
     cfg_obj_t *cfg = new_config(load_file(path));
-    if (!cfg->src) throw_parsing_error(0, 0, (int8_t *) path, E_NULL_FILE);
+    if (!cfg->src) throw_error(E_NULL_FILE, 0, 0, (int8_t *) path);
 
     populate_global(cfg);
+
     parse_config(cfg);
     validate_artifacts(cfg);
+    query_err_handles();
+
     print_artifacts(cfg);
 
     gcc_exec_config(cfg);

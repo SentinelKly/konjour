@@ -33,15 +33,16 @@ typedef enum err_t
 
 	//Parsing errors
 	E_UNEXPECTED_TOK, E_NULL_ARTIFACT, E_INCOMPLETE_ARTIFACT, E_INVALID_FIELD, 
-	E_NULL_FIELD, E_INVALID_VALUE, 
 
 	//Validation errors
-	E_NO_SOURCES, E_NO_ARTIFACTS, E_INVALID_BUILD
+	E_NO_SOURCES, E_NO_ARTIFACTS, E_INVALID_BUILD, E_INVALID_BINARY
 } err_t;
 
 typedef struct err_handler_t
 {
-	err_t type;
+	err_t err;
+	uint64_t i1, i2;
+	int8_t *tok;
 } err_handler_t;
 
 typedef struct artifact_t
@@ -77,7 +78,10 @@ int8_t *set_compiler(int32_t *cflag, int8_t *str);
 void *gcc_gen_build(void *argpr);
 
 //ERROR HANDLER
+void add_err_handler(err_t err, uint64_t i1, uint64_t i2, uint8_t *tok);
+void del_err_handler(err_handler_t *err);
+void query_err_handles();
 void print_artifacts(cfg_obj_t *cfg);
-void throw_parsing_error(uint64_t line, uint64_t charpos, uint8_t *token, err_t err);
+void throw_error(err_t err, uint64_t i1, uint64_t i2, int8_t *token);
 
 #endif
