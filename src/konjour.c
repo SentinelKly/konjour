@@ -1,6 +1,5 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
-//TODO: Finish error handling
 //TODO: Add 'directives' variable
 //TODO: Prevent rebuilding of unmodified artifacts
 
