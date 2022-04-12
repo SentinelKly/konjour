@@ -1,7 +1,8 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
-//TODO: Add 'directives' variable
+//TODO: Allow for either directory or config path
 //TODO: Prevent rebuilding of unmodified artifacts
+//TODO: Find more error cases
 
 #include <stdio.h>
 #include <stdlib.h>
