@@ -1,5 +1,6 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
+//TODO: Allow for comments within config file
 //TODO: Allow for either directory or config path
 //TODO: Prevent rebuilding of unmodified artifacts
 //TODO: Find more error cases
