@@ -66,6 +66,7 @@ void *gcc_gen_build(void *argpr)
 	uint64_t size = 0;
 	int32_t srcs = 0;
 	int32_t cflag = 0;
+	int32_t success = 1;
 
 	int8_t inc_defs[9999] = {0};
 
@@ -110,7 +111,7 @@ void *gcc_gen_build(void *argpr)
 				//printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
 				if (verbose) printf("%s\n", exec);
 
-				system(exec);
+				if (system(exec)) success = 0;
 				srcs ++;
 				continue;
 			}
@@ -152,12 +153,13 @@ void *gcc_gen_build(void *argpr)
 
 	if (verbose) printf("%s\n", exec);
 
-	system(exec);
+	if (system(exec)) success = 0;
 	memset(exec, 0, 9999);
 	//sprintf(exec, "cd %s & %s *.o", art->fields[F_OUT_DIR], RM_EXEC);
 	//system(exec);
 
-	printf("Compilation of %s finished!\n", art->fields[F_NAME]);
+	if (success) printf("Compilation of %s finished!\n", art->fields[F_NAME]);
+	else printf("Compilation of %s has failed!\n", art->fields[F_NAME]);
 	cflag = 0;
 
 	pthread_exit(NULL);
