@@ -1,5 +1,6 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
+//TODO: Test multithreaded obj compilation
 //TODO: Make config the root of all paths
 //TODO: Allow for comments within config file
 //TODO: Allow for either directory or config path
