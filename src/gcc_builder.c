@@ -147,8 +147,8 @@ void *gcc_gen_build(void *argpr)
 		strcat(src_list, src);
 	}
 
-	if (bin_type == 0) sprintf(exec, "%s %s %s %s -o %s/%s.%s", compilers[cflag], art->fields[F_LFLAGS], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], EX_EXT);
-	else if (bin_type == 1) sprintf(exec, "%s %s -shared %s %s -o %s/lib%s.%s", compilers[cflag], art->fields[F_LFLAGS], buffer, src_list, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
+	if (bin_type == 0) sprintf(exec, "%s %s %s %s -o %s/%s.%s", compilers[cflag], art->fields[F_LFLAGS], src_list, buffer, art->fields[F_OUT_DIR], art->fields[F_NAME], EX_EXT);
+	else if (bin_type == 1) sprintf(exec, "%s %s -shared %s %s -o %s/lib%s.%s", compilers[cflag], art->fields[F_LFLAGS], src_list, buffer, art->fields[F_OUT_DIR], art->fields[F_NAME], SO_EXT);
 	else if (bin_type == 2) sprintf(exec, "ar rcs %s/lib%s.a %s %s", art->fields[F_OUT_DIR], art->fields[F_NAME], art->fields[F_LIBS], src_list);
 
 	if (verbose) printf("%s\n", exec);
