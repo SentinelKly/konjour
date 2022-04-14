@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "konjour.h"
 
@@ -29,9 +30,14 @@ static int32_t verbose = 0;
 
 void gcc_exec_config(cfg_obj_t *cfg)
 {
+	clock_t start, end;
+	double cputime;
+
 	pthread_t threads[cfg->index];
 	for (uint64_t i = 1; i < cfg->index + 1; i++)
 	{
+		start = clock();
+
 		pthread_t thread_id;
 		pthread_create(&threads[i - 1], NULL, gcc_gen_build, (cfg->table[i]));
 	}
@@ -40,6 +46,10 @@ void gcc_exec_config(cfg_obj_t *cfg)
 	{
 		pthread_join(threads[i], NULL);
 	}
+
+	end = clock();
+	cputime = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("Build completed in [%.2f] secs.\n\n", cputime);
 }
 
 int8_t *set_compiler(int32_t *cflag, int8_t *str)
