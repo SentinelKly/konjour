@@ -6,7 +6,7 @@
 
 #include "konjour.h"
 
-static int8_t tokens[4] = {'[', ']', '=', '"'};
+static int8_t tokens[5] = {'[', ']', '=', '"', '#'};
 static int8_t binaries[3][11] = {"executable", "shared", "static"};
 static int8_t tok_names[13][8] = 
 {
@@ -145,12 +145,18 @@ int32_t parse_config(cfg_obj_t *cfg)
 		{
 			//Error: line ended without artifact declaration terminator
 			if (mode == M_ARTIFACT) add_err_handler(E_INCOMPLETE_ARTIFACT, line, chars, NULL);
+			else if (mode == M_COMMENT) mode = M_NORMAL;
 
 			line ++;
 			chars = 0;
 		}
 
-		else if (cchar == '\r' || cchar == '\t') continue;
+		else if (cchar == '\r' || cchar == '\t' || mode == M_COMMENT) continue;
+
+		else if (mode != M_TEXT && cchar == tokens[T_POUND])
+		{
+			mode = M_COMMENT;
+		}
 
 		else if (mode == M_TEXT && cchar != tokens[T_QUOTES])
 		{

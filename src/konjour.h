@@ -17,13 +17,13 @@ typedef enum fields_t
 
 typedef enum modes_t
 {
-	M_NORMAL, M_ARTIFACT, M_TEXT, M_VAR, M_VALUE
+	M_NORMAL, M_ARTIFACT, M_TEXT, M_VAR, M_VALUE, M_COMMENT
 } modes_t;
 
 typedef enum token_t
 {
 	T_LEFT_BRACE, T_RIGHT_BRACE,
-	T_EQUALS, T_QUOTES
+	T_EQUALS, T_QUOTES, T_POUND
 } token_t;
 
 typedef enum err_t
