@@ -10,17 +10,17 @@
 #if defined(_WIN64)
 	#define SO_EXT "dll"
 	#define EX_EXT "exe"
-	#define RM_EXEC "del"
+	#define RM_EXEC "rmdir /Q /s "
 	#define DIR_SEP "\\"
 #elif defined(_APPLE_)
 	#define SO_EXT "dylib"
 	#define EX_EXT ""
-	#define RM_EXEC "rm"
+	#define RM_EXEC "rm -rf ./"
 	#define DIR_SEP "/"
 #else
 	#define SO_EXT "so"
 	#define EX_EXT ""
-	#define RM_EXEC "rm"
+	#define RM_EXEC "rm -rf ./"
 	#define DIR_SEP "/"
 #endif
 
@@ -165,8 +165,8 @@ void *gcc_gen_build(void *argpr)
 
 	if (system(exec)) success = 0;
 	memset(exec, 0, 9999);
-	//sprintf(exec, "cd %s & %s *.o", art->fields[F_OUT_DIR], RM_EXEC);
-	//system(exec);
+	sprintf(exec, "%s%s%s%s", RM_EXEC, art->fields[F_OUT_DIR], DIR_SEP, art->fields[F_NAME]);
+	system(exec);
 
 	if (success) printf("Compilation of %s finished!\n", art->fields[F_NAME]);
 	else printf("Compilation of %s has failed!\n", art->fields[F_NAME]);
