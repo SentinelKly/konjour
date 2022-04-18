@@ -63,8 +63,41 @@ int8_t *set_compiler(int32_t *cflag, int8_t *str)
 		index ++;
 	}
 
-	if (strcmp(tstr, "c") == 0) return compilers[0];
+	if (!strcmp(tstr, "c") || !strcmp(tstr, "s")) return compilers[0];
 	else *cflag = 1; return compilers[1];
+}
+
+void *compile_object(void *art, void *src, void *cflag, void *scount, void *inc_defs)
+{
+	artifact_t *c_art = (artifact_t *) art;
+	int32_t bin_type = lookup_binary(c_art->fields[F_BINARY]);
+	int8_t *comp = set_compiler((int *)cflag, src);
+	int8_t exec[999] = {0};
+	int8_t ext[9] = {0};
+	int8_t std[99] = {0};
+
+	if (!strcmp(comp, "gcc"))
+	{
+		strcpy(std, "c");
+		strcat(std, c_art->fields[F_C_STD]);
+	}
+
+	else
+	{
+		strcpy(std, "c++");
+		strcat(std, c_art->fields[F_CXX_STD]);
+	}
+
+	if (!strcmp(c_art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
+	else strcat(std, " -g");
+
+	if (bin_type == 1) sprintf(exec, "%s %s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, c_art->fields[F_CFLAGS], inc_defs, std, src, c_art->fields[F_OUT_DIR], c_art->fields[F_NAME], *((int*) scount));
+	else sprintf(exec, "%s %s %s -std=%s -c %s -o %s/%s/out%d.o", comp, c_art->fields[F_CFLAGS], inc_defs, std, src, c_art->fields[F_OUT_DIR], c_art->fields[F_NAME], *((int*) scount));
+
+	if (verbose) printf("%s\n", exec);
+
+	if (system(exec));
+	(*((int*) scount)) ++;
 }
 
 void *gcc_gen_build(void *argpr)
@@ -72,14 +105,12 @@ void *gcc_gen_build(void *argpr)
 	artifact_t *art = (artifact_t *) argpr;
 
 	int8_t *buffer = malloc(sizeof(int8_t) * 1);
-	int8_t *comp = compilers[0];
 	uint64_t size = 0;
 	int32_t srcs = 0;
 	int32_t cflag = 0;
 	int32_t success = 1;
 
 	int8_t inc_defs[9999] = {0};
-
 	int32_t bin_type = lookup_binary(art->fields[F_BINARY]);
 
 	int8_t ndir[999] = {0};
@@ -94,35 +125,7 @@ void *gcc_gen_build(void *argpr)
 
 			if (i == F_SOURCES)
 			{
-				int8_t exec[999] = {0};
-				int8_t ext[9] = {0};
-				int8_t std[99] = {0};
-
-				comp = set_compiler(&cflag, stok);
-
-				if (!strcmp(comp, "gcc"))
-				{
-					strcpy(std, "c");
-					strcat(std, art->fields[F_C_STD]);
-				}
-
-				else
-				{
-					strcpy(std, "c++");
-					strcat(std, art->fields[F_CXX_STD]);
-				}
-
-				if (!strcmp(art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
-				else strcat(std, " -g");
-
-				if (bin_type == 1) sprintf(exec, "%s %s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, art->fields[F_CFLAGS], inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
-				else sprintf(exec, "%s %s %s -std=%s -c %s -o %s/%s/out%d.o", comp, art->fields[F_CFLAGS], inc_defs, std, stok, art->fields[F_OUT_DIR], art->fields[F_NAME], srcs);
-
-				//printf("Compiling %s of artifact %s\n", stok, art->fields[F_NAME]);
-				if (verbose) printf("%s\n", exec);
-
-				if (system(exec)) success = 0;
-				srcs ++;
+				compile_object(art, stok, &cflag, &srcs, inc_defs);
 				continue;
 			}
 
