@@ -32,24 +32,16 @@ void gcc_exec_config(cfg_obj_t *cfg)
 {
 	clock_t start, end;
 	double cputime;
-
-	pthread_t threads[cfg->index];
+	
 	for (uint64_t i = 1; i < cfg->index + 1; i++)
 	{
 		start = clock();
+		gcc_gen_build(cfg->table[i]);
+		end = clock();
 
-		pthread_t thread_id;
-		pthread_create(&threads[i - 1], NULL, gcc_gen_build, (cfg->table[i]));
+		cputime = ((double) (end - start)) / CLOCKS_PER_SEC;
+		printf("Build completed in [%.2f] secs.\n\n", cputime);
 	}
-
-	for (int32_t i = 0; i < cfg->index + 1; i++)
-	{
-		pthread_join(threads[i], NULL);
-	}
-
-	end = clock();
-	cputime = ((double) (end - start)) / CLOCKS_PER_SEC;
-	printf("Build completed in [%.2f] secs.\n\n", cputime);
 }
 
 int8_t *set_compiler(int32_t *cflag, int8_t *str)
@@ -67,37 +59,42 @@ int8_t *set_compiler(int32_t *cflag, int8_t *str)
 	else *cflag = 1; return compilers[1];
 }
 
-void *compile_object(void *art, void *src, void *cflag, void *scount, void *inc_defs)
+void *compile_object(void *vparg)
 {
-	artifact_t *c_art = (artifact_t *) art;
-	int32_t bin_type = lookup_binary(c_art->fields[F_BINARY]);
-	int8_t *comp = set_compiler((int *)cflag, src);
+	args_t *arg = (args_t *) vparg;
+
+	int32_t bin_type = lookup_binary(arg->art->fields[F_BINARY]);
+	int8_t *comp = set_compiler((int *) arg->cflag, arg->src);
+
 	int8_t exec[999] = {0};
-	int8_t ext[9] = {0};
 	int8_t std[99] = {0};
+
+	printf("Compiling '%s' from artifact %s\n", arg->src, arg->art->fields[F_NAME]);
 
 	if (!strcmp(comp, "gcc"))
 	{
 		strcpy(std, "c");
-		strcat(std, c_art->fields[F_C_STD]);
+		strcat(std, arg->art->fields[F_C_STD]);
 	}
 
 	else
 	{
 		strcpy(std, "c++");
-		strcat(std, c_art->fields[F_CXX_STD]);
+		strcat(std, arg->art->fields[F_CXX_STD]);
 	}
 
-	if (!strcmp(c_art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
+	if (!strcmp(arg->art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
 	else strcat(std, " -g");
 
-	if (bin_type == 1) sprintf(exec, "%s %s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, c_art->fields[F_CFLAGS], inc_defs, std, src, c_art->fields[F_OUT_DIR], c_art->fields[F_NAME], *((int*) scount));
-	else sprintf(exec, "%s %s %s -std=%s -c %s -o %s/%s/out%d.o", comp, c_art->fields[F_CFLAGS], inc_defs, std, src, c_art->fields[F_OUT_DIR], c_art->fields[F_NAME], *((int*) scount));
+	if (bin_type == 1) sprintf(exec, "%s %s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, arg->art->fields[F_CFLAGS], arg->inc_defs, std, arg->src, arg->art->fields[F_OUT_DIR], arg->art->fields[F_NAME], arg->count);
+	else sprintf(exec, "%s %s %s -std=%s -c %s -o %s/%s/out%d.o", comp, arg->art->fields[F_CFLAGS], arg->inc_defs, std, arg->src, arg->art->fields[F_OUT_DIR], arg->art->fields[F_NAME], arg->count);
 
 	if (verbose) printf("%s\n", exec);
 
 	if (system(exec));
-	(*((int*) scount)) ++;
+
+	pthread_exit(NULL);
+	return NULL;
 }
 
 void *gcc_gen_build(void *argpr)
@@ -117,6 +114,9 @@ void *gcc_gen_build(void *argpr)
 	sprintf(ndir, "mkdir %s%s%s", art->fields[F_OUT_DIR], DIR_SEP, art->fields[F_NAME]);
 	system(ndir);
 
+	pthread_t threads[99];
+	args_t args[99];
+
 	for (fields_t i = 3; i < F_CFLAGS; i++)
 	{
 		for (int8_t *stok = strtok(art->fields[i], " "); stok != NULL; stok = strtok(NULL, " "))
@@ -125,7 +125,9 @@ void *gcc_gen_build(void *argpr)
 
 			if (i == F_SOURCES)
 			{
-				compile_object(art, stok, &cflag, &srcs, inc_defs);
+				args[srcs] = (args_t) {art, stok, &cflag, srcs, inc_defs};
+				pthread_create(&threads[srcs], NULL, compile_object, (void *) &args[srcs]);
+				srcs ++;
 				continue;
 			}
 
@@ -148,6 +150,11 @@ void *gcc_gen_build(void *argpr)
 			sprintf(celement, "%s%s ", inserts[i - 3], stok);
 			buffer = strcat(buffer, celement);
 		}
+	}
+
+	for (int32_t i = 0; i < srcs + 1; i++)
+	{
+		pthread_join(threads[i], NULL);
 	}
 
 	int8_t exec[9999] = {0};
@@ -175,6 +182,5 @@ void *gcc_gen_build(void *argpr)
 	else printf("Compilation of %s has failed!\n", art->fields[F_NAME]);
 	cflag = 0;
 
-	pthread_exit(NULL);
 	return NULL;
 }

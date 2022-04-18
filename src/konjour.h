@@ -57,6 +57,15 @@ typedef struct cfg_obj_t
 	int8_t *src;
 } cfg_obj_t;
 
+typedef struct args_t
+{
+	artifact_t *art;
+	int8_t *src;
+	int32_t *cflag;
+	int32_t count;
+	int8_t *inc_defs;
+
+} args_t;
 
 //CFG PARSER
 artifact_t *gen_artifact(const int8_t *name);
