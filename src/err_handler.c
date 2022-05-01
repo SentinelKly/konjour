@@ -64,7 +64,7 @@ void print_artifacts(cfg_obj_t *cfg)
 
     for (int32_t i = 1; i < cfg->index + 1; i++)
     {
-        printf("Artifact: %s\n", cfg->table[i]->fields[0]);
+        printf("artifact: %s\n", cfg->table[i]->fields[0]);
 
         for (int32_t ii = 1; ii < F_SIZE; ii++)
         {
