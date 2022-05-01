@@ -55,8 +55,13 @@ int8_t *set_compiler(int32_t *cflag, int8_t *str)
 		index ++;
 	}
 
-	if (!strcmp(tstr, "c") || !strcmp(tstr, "s")) return compilers[0];
-	else *cflag = 1; return compilers[1];
+	if (!strcmp(tstr, "ppc") || !strcmp(tstr, "cc") || !strcmp(tstr, "cxx"))
+	{
+		*cflag = 1; 
+		return compilers[1];
+	} 
+
+	else if (!strcmp(tstr, "c") || !strcmp(tstr, "s")) return compilers[0];
 }
 
 void *compile_object(void *vparg)
