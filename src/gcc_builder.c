@@ -157,10 +157,7 @@ void *gcc_gen_build(void *argpr)
 		}
 	}
 
-	for (int32_t i = 0; i < srcs + 1; i++)
-	{
-		pthread_join(threads[i], NULL);
-	}
+	for (int32_t i = 0; i < srcs + 1; i++) pthread_join(threads[i], NULL);
 
 	int8_t exec[9999] = {0};
 	int8_t src_list[999] = {0};
@@ -179,12 +176,14 @@ void *gcc_gen_build(void *argpr)
 	if (verbose) printf("%s\n", exec);
 
 	if (system(exec)) success = 0;
+	
 	memset(exec, 0, 9999);
 	sprintf(exec, "%s%s%s%s", RM_EXEC, art->fields[F_OUT_DIR], DIR_SEP, art->fields[F_NAME]);
 	system(exec);
 
 	if (success) printf("Compilation of %s finished!\n", art->fields[F_NAME]);
 	else printf("Compilation of %s has failed!\n", art->fields[F_NAME]);
+
 	cflag = 0;
 
 	return NULL;
