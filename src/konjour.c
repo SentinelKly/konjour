@@ -1,5 +1,6 @@
 //KONJOUR BUILD SYSTEM 0.0.1
 
+//TODO: Add MSVC support
 //TODO: Make config the root of all paths
 //TODO: Allow for either directory or config path
 //TODO: Prevent rebuilding of unmodified artifacts
