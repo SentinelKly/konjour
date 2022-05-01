@@ -19,7 +19,7 @@ artifact_t *gen_artifact(const int8_t *name)
 	artifact_t *art = malloc(sizeof(artifact_t));
 	art->fields = malloc(sizeof(int8_t*) * F_SIZE);
 
-	art->fields[F_NAME] = malloc(sizeof(int8_t) * strlen(name));
+	art->fields[F_NAME] = malloc((sizeof(int8_t) * strlen(name)) + 1);
 	strcpy(art->fields[F_NAME], name);
 
 	for (int32_t i = 1; i < F_SIZE; i++)
@@ -291,7 +291,7 @@ int8_t *set_heap_str(int8_t *str)
 	if (!str) return NULL;
 	int8_t *hstr = NULL;
 
-	hstr = malloc(sizeof(int8_t) * strlen(str));
+	hstr = malloc((sizeof(int8_t) * strlen(str)) + 1);
 	strcpy(hstr, str);
 
 	return hstr;
