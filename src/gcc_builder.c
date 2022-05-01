@@ -55,13 +55,15 @@ int8_t *set_compiler(int32_t *cflag, int8_t *str)
 		index ++;
 	}
 
-	if (!strcmp(tstr, "ppc") || !strcmp(tstr, "cc") || !strcmp(tstr, "cxx"))
+	if (!strcmp(tstr, "ppc") || !strcmp(tstr, "cc") || !strcmp(tstr, "xxc"))
 	{
 		*cflag = 1; 
 		return compilers[1];
 	} 
 
 	else if (!strcmp(tstr, "c") || !strcmp(tstr, "s")) return compilers[0];
+
+	//TODO: throw warning and default to C compiler
 }
 
 void *compile_object(void *vparg)
