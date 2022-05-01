@@ -237,11 +237,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 				tokpos = reset_token(ctok);
 			}
 
-			else
-			{
-				//Error: equals token outside of field assign
-				add_err_handler(E_UNEXPECTED_TOK, line, chars, "=");
-			}
+			//Error: equals token outside of field assign
+			else add_err_handler(E_UNEXPECTED_TOK, line, chars, "=");
 		}
 
 		else if (cchar == tokens[T_QUOTES])
@@ -259,9 +256,6 @@ int32_t parse_config(cfg_obj_t *cfg)
 					tokpos ++;
 					ctok[tokpos] = '\0';
 
-					//cfg->table[artifact]->fields[field] = malloc(sizeof(int8_t) * tokpos);
-					//strcpy(cfg->table[artifact]->fields[field], ctok);
-
 					cfg->table[artifact]->fields[field] = set_heap_str(ctok);
 				}
 
@@ -270,8 +264,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 			}
 
 			//Error: quotes outside of value start or ending
-			else
-				add_err_handler(E_UNEXPECTED_TOK, line, chars, "\"");
+			else add_err_handler(E_UNEXPECTED_TOK, line, chars, "\"");
 		}
 
 		else if (mode == M_NORMAL && LOWER_ASCII(cchar))
