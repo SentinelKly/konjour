@@ -102,10 +102,8 @@ void *compile_object(void *vparg)
 	return NULL;
 }
 
-void *gcc_gen_build(void *argpr)
+void gcc_gen_build(artifact_t *art)
 {
-	artifact_t *art = (artifact_t *) argpr;
-
 	int8_t *buffer = malloc(sizeof(int8_t) * 1);
 	uint64_t size = 0;
 	int32_t srcs = 0;
@@ -176,7 +174,7 @@ void *gcc_gen_build(void *argpr)
 	if (verbose) printf("%s\n", exec);
 
 	if (system(exec)) success = 0;
-	
+
 	memset(exec, 0, 9999);
 	sprintf(exec, "%s%s%s%s", RM_EXEC, art->fields[F_OUT_DIR], DIR_SEP, art->fields[F_NAME]);
 	system(exec);
@@ -185,6 +183,4 @@ void *gcc_gen_build(void *argpr)
 	else printf("Compilation of %s has failed!\n", art->fields[F_NAME]);
 
 	cflag = 0;
-
-	return NULL;
 }
