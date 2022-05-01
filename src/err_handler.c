@@ -70,7 +70,7 @@ void print_artifacts(cfg_obj_t *cfg)
         {
             int8_t *fname = get_field_name(ii);
 
-            if (!cfg->table[i]->fields[ii] || !strcmp(cfg->table[i]->fields[ii], " ") || (ii > F_BINARY && ii < F_C_STD))
+            if (!cfg->table[i]->fields[ii] || !strcmp(cfg->table[i]->fields[ii], " ") || (ii > F_BINARY && ii < F_BUILD))
                 continue;
 
             printf("%s: %s\n", fname, cfg->table[i]->fields[ii]);
