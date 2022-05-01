@@ -84,7 +84,8 @@ void validate_artifacts(cfg_obj_t *cfg);
 //GCC BUILDER
 void gcc_exec_config(cfg_obj_t *cfg);
 int8_t *set_compiler(int32_t *cflag, int8_t *str);
-void *gcc_gen_build(void *argpr);
+void gcc_gen_build(artifact_t *art);
+void *compile_object(void *vparg);
 
 //ERROR HANDLER
 void add_err_handler(err_t err, uint64_t i1, uint64_t i2, uint8_t *tok);
