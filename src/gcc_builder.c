@@ -106,7 +106,9 @@ void *compile_object(void *vparg)
 
 void gcc_gen_build(artifact_t *art)
 {
-	int8_t *buffer = malloc(sizeof(int8_t) * 1);
+	int8_t *buffer = malloc(sizeof(int8_t) * 99999);
+	memset(buffer, 0, 99999);
+
 	uint64_t size = 0;
 	int32_t srcs = 0;
 	int32_t cflag = 0;
@@ -150,8 +152,6 @@ void gcc_gen_build(artifact_t *art)
 
 			//Build linking arguments
 			int8_t celement[99];
-			size += strlen(inserts[i - 3]) + strlen(stok) + 2;
-			buffer = realloc(buffer, sizeof(int8_t) * size);
 			sprintf(celement, "%s%s ", inserts[i - 3], stok);
 			buffer = strcat(buffer, celement);
 		}
