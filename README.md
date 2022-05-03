@@ -23,9 +23,11 @@ That will then build the proper and release ready konjour build.
 
 ## Beta Roadmap
 - [X] Multithreaded processing
-- [ ] Interoperability with Cmake projects
 - [X] Verbose error handling
 - [X] Distinction between debug and release modes
+- [ ] More bug fixes and parsing sanitisation
 
 ## Current Issues
 - [ ] 'Dodgy' code fixes
+- [ ] Certain syntax errors go unnoticed 
+- [ ] GCC is the only supported compiler
