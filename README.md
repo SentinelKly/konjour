@@ -1,8 +1,9 @@
 <img src="branding/kj_banner.png">
 
-<div style="float: left">
+<div align=center style="float: left">
   <img src="https://img.shields.io/github/license/sentinelkly/konjour">
   <img src="https://img.shields.io/tokei/lines/github/sentinelkly/konjour">
+  <img src="https://img.shields.io/badge/version-alpha-yellow">
 </div>
 
 ## About
