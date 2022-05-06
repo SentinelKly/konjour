@@ -1,0 +1,16 @@
+pipeline
+{
+    agent any
+
+    stages
+    {
+        stage ('build')
+        {
+            steps
+            {
+                ./build.bat
+                ./bin/konjour-dbg.exe
+            }
+        }
+    }
+}
