@@ -90,7 +90,7 @@ void *compile_object(void *vparg)
 		strcat(std, arg->art->fields[F_CXX_STD]);
 	}
 
-	if (!strcmp(arg->art->fields[F_BUILD], "release")) strcat(std, " -O2 -s");
+	if (!strcmp(arg->art->fields[F_BUILD], "release")) strcat(std, " -O3 -DNDEBUG -s");
 	else strcat(std, " -g");
 
 	if (bin_type == 1) sprintf(exec, "%s %s %s -std=%s -c -Wall -Werror -fPIC %s -o %s/%s/out%d.o", comp, arg->art->fields[F_CFLAGS], arg->inc_defs, std, arg->src, arg->art->fields[F_OUT_DIR], arg->art->fields[F_NAME], arg->count);
