@@ -22,10 +22,17 @@ then bootstrap itself using the konjour.cfg:
 That will then build the proper and release ready konjour build.
 
 ## Beta Roadmap
-- [X] Multithreaded processing
-- [X] Verbose error handling
-- [X] Distinction between debug and release modes
+- [X] Multithreaded compilation
 - [ ] More bug fixes and parsing sanitisation
+- [ ] Avoid rebuilding unchanged targets
+- [ ] Easier to read output
+- [ ] Configurable konjour settings
+- [ ] Allow for field concatenation
+- [ ] Cmake interoperability 
+- [ ] Support for clang and msvc
+- [ ] Basic meta-scripting
+- [ ] Artefact sorted building
+- [ ] Support for custom variables
 
 ## Current Issues
 - [ ] 'Dodgy' code fixes
