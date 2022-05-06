@@ -1,4 +1,8 @@
+---
+
 <img src="branding/kj_banner.png">
+
+---
 
 <div align=center style="float: left">
   <img src="https://img.shields.io/github/license/sentinelkly/konjour">
