@@ -33,10 +33,7 @@ artifact_t *gen_artifact(const int8_t *name)
 
 void destroy_artifact(artifact_t *art)
 {
-	for (uint16_t i = 0; i < F_SIZE; i++)
-	{
-		free(art->fields[i]);
-	}
+	for (uint16_t i = 0; i < F_SIZE; i++) free(art->fields[i]);
 
 	free(art->fields);
 	free(art);
@@ -55,11 +52,7 @@ cfg_obj_t *new_config(int8_t *src)
 
 void destroy_config(cfg_obj_t *cfg)
 {
-	for (uint32_t i = 0; i < cfg->index + 1; i++)
-	{
-	   destroy_artifact(cfg->table[i]);
-	}
-
+	for (uint32_t i = 0; i < cfg->index + 1; i++) destroy_artifact(cfg->table[i]);
 	free(cfg->src);
 	free(cfg);
 }
@@ -75,31 +68,23 @@ uint64_t lookup_artifact(cfg_obj_t *cfg, int8_t *name)
 	cfg->index ++;
 	cfg->table = realloc(cfg->table, sizeof(artifact_t*) * (cfg->index + 1));
 	cfg->table[cfg->index] = gen_artifact(name);
+	
 	return cfg->index;
 }
 
 int32_t lookup_field(artifact_t *art, const int8_t *name)
 {
 	for (int32_t i = 0; i < F_SIZE; i++)
-	{
 		if (!strcmp(tok_names[i], name)) return i;
-	}
-
 	return -1;
 }
 
-int8_t *get_field_name(int32_t field)
-{
-	return tok_names[field];
-}
+int8_t *get_field_name(int32_t field) {return tok_names[field];}
 
 int32_t lookup_binary(int8_t *str)
 {
 	for (int32_t i = 0; i < 3; i++)
-	{
 		if (!strcmp(str, binaries[i])) return i;
-	}
-
 	return -1;
 }
 
@@ -152,11 +137,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 		}
 
 		else if (cchar == '\r' || cchar == '\t' || mode == M_COMMENT) continue;
-
-		else if (mode != M_TEXT && cchar == tokens[T_POUND])
-		{
-			mode = M_COMMENT;
-		}
+		else if (mode != M_TEXT && cchar == tokens[T_POUND]) mode = M_COMMENT;
 
 		else if (mode == M_TEXT && cchar != tokens[T_QUOTES])
 		{
@@ -189,11 +170,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 				tokpos = reset_token(ctok);
 			}
 
-			else
-			{
-				//Error: left brace outside of text or artifact scope declaration
-				add_err_handler(E_UNEXPECTED_TOK, line, chars, "[");
-			}
+			//Error: left brace outside of text or artifact scope declaration
+			else add_err_handler(E_UNEXPECTED_TOK, line, chars, "[");
 		}
 
 		else if (cchar == tokens[T_RIGHT_BRACE])
@@ -202,9 +180,7 @@ int32_t parse_config(cfg_obj_t *cfg)
 			{
 				//Error: Artifact declaration ended without a valid name
 				if (!tokpos || !strcmp(ctok, "")) 
-				{
 					add_err_handler(E_NULL_ARTIFACT, line, chars, NULL);
-				}
 
 				else 
 				{
@@ -217,11 +193,8 @@ int32_t parse_config(cfg_obj_t *cfg)
 				tokpos = reset_token(ctok);
 			}
 
-			else
-			{
-				//Error: right brace outside of text or artifact scope declaration
-				add_err_handler(E_UNEXPECTED_TOK, line, chars, "]");
-			}
+			//Error: right brace outside of text or artifact scope declaration
+			else add_err_handler(E_UNEXPECTED_TOK, line, chars, "]");
 		}
 
 		else if (cchar == tokens[T_EQUALS])
@@ -233,7 +206,6 @@ int32_t parse_config(cfg_obj_t *cfg)
 
 				//Error: field lookup yielded no valid results
 				if (field == -1) add_err_handler(E_INVALID_FIELD, line, chars - 1, ctok);
-
 				tokpos = reset_token(ctok);
 			}
 
