@@ -36,6 +36,7 @@ That will then build the proper and release ready konjour build.
 - [ ] More bug fixes and parsing sanitisation
 - [ ] Avoid rebuilding unchanged targets
 - [ ] Easier to read output
+- [ ] Pre-compiled header support
 - [ ] Configurable konjour settings
 - [ ] Allow for field concatenation
 - [ ] Cmake interoperability 
