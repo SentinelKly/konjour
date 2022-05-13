@@ -40,7 +40,7 @@ That will then build the proper and release ready konjour build.
 - [ ] Configurable konjour settings
 - [ ] Allow for field concatenation
 - [ ] Cmake interoperability 
-- [ ] Support for clang and msvc
+- [ ] Support for MSVC
 - [ ] Basic meta-scripting
 - [ ] Artefact sorted building
 - [ ] Support for custom variables
@@ -48,4 +48,3 @@ That will then build the proper and release ready konjour build.
 ## Current Issues
 - [ ] 'Dodgy' code fixes
 - [ ] Certain syntax errors go unnoticed 
-- [ ] GCC is the only supported compiler
