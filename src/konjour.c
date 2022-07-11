@@ -239,4 +239,6 @@ int32_t main(int32_t argc, const int8_t **argv)
 	build_table_t *table = new_build_table(config_path);
 	parse_and_validate_config(table, config_path);
 	query_errors();
+
+	delete_build_table(table);
 }
