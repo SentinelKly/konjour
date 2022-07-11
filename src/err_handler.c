@@ -8,11 +8,11 @@ static const int8_t *errstrings[10] =
 {
 	"FILE IO ERROR: '%s' is not a valid config path!\n",
 	"PARSE ERROR: (%d:%d) -> unexpected token '%s'\n",
-	"PARSE ERROR: (%d:%d) -> invalid artifact definition!\n",
-	"PARSE ERROR: (%d:%d) -> incomplete artifact declaration!\n",
+	"PARSE ERROR: (%d:%d) -> invalid artefact definition!\n",
+	"PARSE ERROR: (%d:%d) -> incomplete artefact declaration!\n",
 	"PARSE ERROR: (%d:%d) -> '%s' is not a valid field!\n",
-	"VALIDATION ERROR: artifact '%s' has no sources!\n",
-	"VALIDATION ERROR: no compilation artifacts!\n",
+	"VALIDATION ERROR: artefact '%s' has no sources!\n",
+	"VALIDATION ERROR: no compilation artefacts!\n",
 	"VALIDATION ERROR: '%s' is not a valid build type!\n",
 	"VALIDATION ERROR: '%s' is not a valid binary type!\n"
 };
@@ -56,28 +56,6 @@ void query_err_handles()
 	}
 
 	if (err_count) exit(-1);
-}
-
-void print_artifacts(cfg_obj_t *cfg)
-{
-	printf("\nPreparing to summon the following artifacts: \n\n");
-
-    for (int32_t i = 1; i < cfg->index + 1; i++)
-    {
-        printf("artifact: %s\n", cfg->table[i]->fields[0]);
-
-        for (int32_t ii = 1; ii < F_SIZE; ii++)
-        {
-            int8_t *fname = get_field_name(ii);
-
-            if (!cfg->table[i]->fields[ii] || !strcmp(cfg->table[i]->fields[ii], " ") || (ii > F_BINARY && ii < F_BUILD))
-                continue;
-
-            printf("%s: %s\n", fname, cfg->table[i]->fields[ii]);
-        }
-
-        printf("\n");
-    }
 }
 
 void throw_error(err_t err, uint64_t i1, uint64_t i2, int8_t *token)

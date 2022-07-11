@@ -1,3 +1,5 @@
+//NOTE: DEPRECATED AND WILL BE REMOVED AND REBUILT SOON!
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
