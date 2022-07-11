@@ -1,5 +1,7 @@
-# Prerequisites
-*.d
+# Editor directories
+/.idea
+/.vscode
+/.vs
 
 # Compiled Object files
 *.slo
