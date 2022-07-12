@@ -9,21 +9,38 @@
 
 #include "../vendor/tomlc99/toml.h"
 
-#define ARTEFACT_NATIVE 0
-#define ARTEFACT_CMAKE  6
-#define ARTEFACT_MAKE   5
+#define ARTEFACT_NATIVE 0x00
+#define ARTEFACT_CMAKE  0x06
+#define ARTEFACT_MAKE   0x05
 
-#define COMPILER_GCC    0
-#define COMPILER_CLANG  1
+#define COMPILER_GCC    0x00
+#define COMPILER_CLANG  0x01
 
-#define BIN_EXECUTABLE  0
-#define BIN_SHARED      1
-#define BIN_STATIC      2
+#define BIN_EXECUTABLE  0x00
+#define BIN_SHARED      0x01
+#define BIN_STATIC      0x02
 
-#define MODE_RELEASE    0
-#define MODE_DEBUG      1
+#define MODE_RELEASE    0x00
+#define MODE_DEBUG      0x01
 
 #define INVALID_ENUM    0xFF
+
+#if defined(_WIN64)
+	#define SO_EXT "dll"
+	#define EX_EXT "exe"
+	#define RM_EXEC "rmdir /Q /s "
+	#define DIR_SEP "\\"
+#elif defined(_APPLE_)
+	#define SO_EXT "dylib"
+	#define EX_EXT ""
+	#define RM_EXEC "rm -rf ./"
+	#define DIR_SEP "/"
+#else
+	#define SO_EXT "so"
+	#define EX_EXT ""
+	#define RM_EXEC "rm -rf ./"
+	#define DIR_SEP "/"
+#endif
 
 typedef enum {false, true} bool;
 
@@ -133,7 +150,7 @@ typedef struct build_table_t
 	artefact_t **arts;
 	uint64_t count;
 
-	uint8_t *make_prefix;
+	kstring_t *make_prefix;
 	uint8_t compiler;
 	bool verbose;
 } build_table_t;
@@ -141,7 +158,8 @@ typedef struct build_table_t
 build_table_t *new_build_table(uint8_t *path);
 void delete_build_table(build_table_t *table);
 void append_new_artefact(build_table_t *table, artefact_t *art);
-void parse_and_validate_config(build_table_t *table, uint8_t *path);
+void parse_config_into_table(build_table_t *table, uint8_t *path);
+void validate_table(build_table_t *table);
 
 uint8_t resolve_artefact_type(uint8_t *new, uint8_t *name);
 uint8_t resolve_artefact_binary(uint8_t *binary);

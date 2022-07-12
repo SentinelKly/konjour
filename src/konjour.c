@@ -16,23 +16,23 @@ static const int8_t NATIVE_FIELDS[12][10] =
 	"inc_paths", "lib_paths", "sources", "defines", "libs"
 };
 
+static error_t **g_errors;
+static uint64_t g_error_count = 0;
+
 /*=======================================
  *            ERROR HANDLER
  *=======================================
 */
 
-static error_t **errors;
-static uint64_t error_count = 0;
-
 void add_error(error_type_t type, uint8_t *token)
 {
-	errors = realloc(errors, sizeof(error_t*) * (error_count + 1));
+	g_errors = realloc(g_errors, sizeof(error_t*) * (g_error_count + 1));
 
-	errors[error_count] = malloc(sizeof(error_t));
-	errors[error_count]->tok = set_heap_string(token);
-	errors[error_count]->type = type;
+	g_errors[g_error_count] = malloc(sizeof(error_t));
+	g_errors[g_error_count]->tok = set_heap_string(token);
+	g_errors[g_error_count]->type = type;
 
-	error_count ++;
+	g_error_count ++;
 }
 
 void delete_error(error_t *err)
@@ -43,18 +43,18 @@ void delete_error(error_t *err)
 
 void query_errors(void)
 {
-	for (uint64_t i = 0; i < error_count; i++)
+	for (uint64_t i = 0; i < g_error_count; i++)
 	{
 		int8_t errmsg[9999] = {0};
-		error_t *handle = errors[i];
+		error_t *handle = g_errors[i];
 
 		sprintf(errmsg, ERROR_STRINGS[handle->type], handle->tok);
 		printf(errmsg);
 
-		delete_error(errors[i]);
+		delete_error(g_errors[i]);
 	}
 
-	if (error_count) exit(-1);
+	if (g_error_count) exit(-1);
 }
 
 void throw_error(error_type_t type, int8_t *token)
@@ -178,7 +178,7 @@ void append_new_artefact(build_table_t *table, artefact_t *art)
 	table->arts[table->count - 1] = art;
 }
 
-void parse_and_validate_config(build_table_t *table, uint8_t *path)
+void parse_config_into_table(build_table_t *table, uint8_t *path)
 {
 	FILE *fp = fopen(path, "r");
 	if (!fp) throw_error(E_NULL_FILE, path);
@@ -189,14 +189,13 @@ void parse_and_validate_config(build_table_t *table, uint8_t *path)
 
 	if (!conf) throw_error(E_INVALID_FILE, error_buffer);
 
-	toml_array_t *artefacts         = toml_array_in(conf, "artefacts");
-	toml_datum_t global_compiler    = toml_string_in(conf, "KONJOUR_COMPILER");
-	toml_datum_t global_make_prefix = toml_string_in(conf, "KONJOUR_MAKE_PREFIX");
-	toml_datum_t global_verbose     = toml_bool_in(conf, "KONJOUR_VERBOSE");
+	table->make_prefix = new_kstring_from_toml(toml_string_in(conf, "KONJOUR_MAKE_PREFIX"));
+	toml_array_t *artefacts      = toml_array_in(conf, "artefacts");
+	toml_datum_t global_compiler = toml_string_in(conf, "KONJOUR_COMPILER");
+	toml_datum_t global_verbose  = toml_bool_in(conf, "KONJOUR_VERBOSE");
 
 	if (global_compiler.ok) table->compiler = resolve_compiler(string_to_lower(global_compiler.u.s));
-	if (global_make_prefix.ok) table->make_prefix = set_heap_string(global_make_prefix.u.s);
-	if (global_verbose.ok) table->verbose = global_verbose.u.b;
+	if (global_verbose.ok)  table->verbose  = global_verbose.u.b;
 
 	if (artefacts)
 	{
@@ -259,6 +258,11 @@ void parse_and_validate_config(build_table_t *table, uint8_t *path)
 
 	else add_error(E_NO_ARTEFACT_ARRAY, "");
 	toml_free(conf);
+}
+
+void validate_table(build_table_t *table)
+{
+	
 }
 
 uint8_t resolve_artefact_type(uint8_t *new, uint8_t *name)
@@ -388,7 +392,10 @@ int32_t main(int32_t argc, const int8_t **argv)
 	else config_path = (uint8_t *) argv[1];
 
 	build_table_t *table = new_build_table(config_path);
-	parse_and_validate_config(table, config_path);
+	parse_config_into_table(table, config_path);
+	validate_table(table);
 	query_errors();
+
+	printf(table->make_prefix->ptr);
 	delete_build_table(table);
 }
