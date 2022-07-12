@@ -85,7 +85,7 @@ kstring_array_t *append_kstring_array(kstring_array_t *array, kstring_t *str)
 	if (!str) return array;
 
 	array->count ++;
-	array->elements = realloc(array, sizeof(kstring_t *) * array->count);
+	array->elements = realloc(array->elements, sizeof(kstring_t *) * array->count);
 	array->elements[array->count - 1] = str;
 	return array;
 }
@@ -100,7 +100,7 @@ kstring_array_t *new_kstring_array_from_toml(toml_array_t *tarray)
 		{
 			toml_datum_t elem = toml_string_at(tarray, i);
 			if (!elem.ok) break;
-			append_kstring_array(array, new_kstring(elem.u.s));
+			array = append_kstring_array(array, new_kstring(elem.u.s));
 		}
 	}
 
@@ -109,7 +109,8 @@ kstring_array_t *new_kstring_array_from_toml(toml_array_t *tarray)
 
 void delete_kstring_array(kstring_array_t *array)
 {
-	for (uint64_t i = 0; i < array->count; i++) free(array->elements[i]);
+    if (!array) return;
+	for (uint64_t i = 0; i < array->count; i++) delete_kstring(array->elements[i]);
 	free(array);
 }
 
@@ -138,6 +139,7 @@ kstring_t *new_kstring_from_toml(toml_datum_t chars)
 
 void delete_kstring(kstring_t *str)
 {
+    if (!str) return;
 	free(str->ptr);
 	free(str);
 }
@@ -388,8 +390,5 @@ int32_t main(int32_t argc, const int8_t **argv)
 	build_table_t *table = new_build_table(config_path);
 	parse_and_validate_config(table, config_path);
 	query_errors();
-
-	//printf(table->arts[0]->native.c_std);
-
 	delete_build_table(table);
 }
