@@ -2,11 +2,13 @@ KONJOUR_COMPILER = "gcc"
 KONJOUR_MAKE_PREFIX = "mingw32-make"
 KONJOUR_VERBOSE = true
 
-artefacts = ["cmake@konjour"]
+artefacts = ["konjour"]
 
 [konjour]
-	type   = "executable"
-	mode   = "release"
-	output = "bin"
+	c_std   = "11"
+	cxx_std = "14"
+	binary  = "executable"
+	mode    = "release"
+	output  = "bin"
 	
 	sources = ["src/konjour.c", "src/cfg_parser.c", "src/gcc_builder.c"]

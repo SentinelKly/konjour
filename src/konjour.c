@@ -10,10 +10,10 @@ static const int8_t *ERROR_STRINGS[10] =
 };
 
 static const int8_t BINARY_LIST[3][11] = {"executable", "shared", "static"};
-static const int8_t FIELDS_NATIVE[12][10] = 
+static const int8_t NATIVE_FIELDS[12][10] = 
 {
-	"binary", "out_dir", "inc_dir", "lib_dir", "libs",
-	"defines", "sources", "cflags", "lflags", "c_std", "cxx_std", "build"
+	"c_std", "cxx_std", "output", "cflags", "lflags", "binary", "mode",
+	"inc_paths", "lib_paths", "sources", "defines", "libs"
 };
 
 /*=======================================
@@ -67,6 +67,82 @@ void throw_error(error_type_t type, int8_t *token)
 }
 
 /*=======================================
+ *              KSTRINGS
+ *=======================================
+*/
+
+kstring_array_t *new_kstring_array()
+{
+	kstring_array_t *array = malloc(sizeof(kstring_array_t) * 1);
+	array->elements = NULL;
+	array->count = 0;
+
+	return array;
+}
+
+kstring_array_t *append_kstring_array(kstring_array_t *array, kstring_t *str)
+{
+	if (!str) return array;
+
+	array->count ++;
+	array->elements = realloc(array, sizeof(kstring_t *) * array->count);
+	array->elements[array->count - 1] = str;
+	return array;
+}
+
+kstring_array_t *new_kstring_array_from_toml(toml_array_t *tarray)
+{
+	kstring_array_t *array = new_kstring_array();
+
+	if (tarray)
+	{
+		for (uint64_t i = 0;; i++)
+		{
+			toml_datum_t elem = toml_string_at(tarray, i);
+			if (!elem.ok) break;
+			append_kstring_array(array, new_kstring(elem.u.s));
+		}
+	}
+
+	return array;
+}
+
+void delete_kstring_array(kstring_array_t *array)
+{
+	for (uint64_t i = 0; i < array->count; i++) free(array->elements[i]);
+	free(array);
+}
+
+kstring_t *new_kstring(uint8_t *chars)
+{
+	kstring_t *str = malloc(sizeof(kstring_t) * 1);
+	str->ptr = NULL;
+	str->size = 0;
+
+	if (chars) 
+	{
+		str->size = strlen(chars);
+		str->ptr  = malloc(sizeof(uint8_t) * str->size);
+		str->ptr  = strcpy(str->ptr, chars);
+	}
+
+	return str;
+}
+
+kstring_t *new_kstring_from_toml(toml_datum_t chars)
+{
+	kstring_t *str = NULL;
+	if (chars.ok) str = new_kstring(chars.u.s);
+	return str;
+}
+
+void delete_kstring(kstring_t *str)
+{
+	free(str->ptr);
+	free(str);
+}
+
+/*=======================================
  *             BUILD TABLE
  *=======================================
 */
@@ -75,11 +151,11 @@ build_table_t *new_build_table(uint8_t *path)
 {
 	build_table_t *table = malloc(sizeof(build_table_t) * 1);
 
-	table->count = 0;
-	table->compiler = COMPILER_GCC;
-	table->arts = NULL;
+	table->count       = 0;
+	table->compiler    = COMPILER_GCC;
+	table->arts        = NULL;
 	table->make_prefix = NULL;
-	table->verbose = false;
+	table->verbose     = false;
 
 	return table;
 }
@@ -100,13 +176,6 @@ void append_new_artefact(build_table_t *table, artefact_t *art)
 	table->arts[table->count - 1] = art;
 }
 
-uint8_t resolve_compiler(uint8_t *compiler)
-{
-	if (!strcmp(compiler, "gcc")) return COMPILER_GCC;
-	else if (!strcmp(compiler, "clang")) return COMPILER_CLANG;
-	else return INVALID_ENUM;
-}
-
 void parse_and_validate_config(build_table_t *table, uint8_t *path)
 {
 	FILE *fp = fopen(path, "r");
@@ -118,10 +187,10 @@ void parse_and_validate_config(build_table_t *table, uint8_t *path)
 
 	if (!conf) throw_error(E_INVALID_FILE, error_buffer);
 
-	toml_array_t *artefacts = toml_array_in(conf, "artefacts");
-	toml_datum_t global_compiler = toml_string_in(conf, "KONJOUR_COMPILER");
+	toml_array_t *artefacts         = toml_array_in(conf, "artefacts");
+	toml_datum_t global_compiler    = toml_string_in(conf, "KONJOUR_COMPILER");
 	toml_datum_t global_make_prefix = toml_string_in(conf, "KONJOUR_MAKE_PREFIX");
-	toml_datum_t global_verbose = toml_bool_in(conf, "KONJOUR_VERBOSE");
+	toml_datum_t global_verbose     = toml_bool_in(conf, "KONJOUR_VERBOSE");
 
 	if (global_compiler.ok) table->compiler = resolve_compiler(string_to_lower(global_compiler.u.s));
 	if (global_make_prefix.ok) table->make_prefix = set_heap_string(global_make_prefix.u.s);
@@ -147,7 +216,39 @@ void parse_and_validate_config(build_table_t *table, uint8_t *path)
 			if (!art_table)
 			{
 				add_error(E_NO_ARTEFACT, art_str.u.s);
+				delete_artefact(art);
 				continue;
+			}
+
+			if (art->type == ARTEFACT_CMAKE)
+			{
+				art->cmake.source    = new_kstring_from_toml(toml_string_in(art_table, "source"));
+				art->cmake.generator = new_kstring_from_toml(toml_string_in(art_table, "generator"));
+				art->cmake.output    = new_kstring_from_toml(toml_string_in(art_table, "output"));
+			}
+
+			else if (art->type == ARTEFACT_MAKE)
+				art->make.flags = new_kstring_from_toml(toml_string_in(art_table, "flags"));
+
+			else
+			{
+				art->native.c_std   = new_kstring_from_toml(toml_string_in(art_table, NATIVE_FIELDS[F_C_STD]));
+				art->native.cxx_std = new_kstring_from_toml(toml_string_in(art_table, NATIVE_FIELDS[F_CXX_STD]));
+				art->native.output  = new_kstring_from_toml(toml_string_in(art_table, NATIVE_FIELDS[F_OUTPUT]));
+				art->native.cflags  = new_kstring_from_toml(toml_string_in(art_table, NATIVE_FIELDS[F_CFLAGS]));
+				art->native.lflags  = new_kstring_from_toml(toml_string_in(art_table, NATIVE_FIELDS[F_LFLAGS]));
+
+				toml_datum_t art_binary = toml_string_in(art_table, NATIVE_FIELDS[F_BINARY]);
+				if (art_binary.ok) art->native.binary = resolve_artefact_binary(art_binary.u.s);
+
+				toml_datum_t art_mode = toml_string_in(art_table, NATIVE_FIELDS[F_MODE]);
+				if (art_mode.ok) art->native.mode = resolve_artefact_mode(art_mode.u.s);
+
+				art->native.inc_paths = new_kstring_array_from_toml(toml_array_in(art_table, NATIVE_FIELDS[F_INC_PATHS]));
+				art->native.lib_paths = new_kstring_array_from_toml(toml_array_in(art_table, NATIVE_FIELDS[F_LIB_PATHS]));
+				art->native.sources   = new_kstring_array_from_toml(toml_array_in(art_table, NATIVE_FIELDS[F_SOURCES]));
+				art->native.defines   = new_kstring_array_from_toml(toml_array_in(art_table, NATIVE_FIELDS[F_DEFINES]));
+				art->native.libs      = new_kstring_array_from_toml(toml_array_in(art_table, NATIVE_FIELDS[F_LIBS]));
 			}
 
 			append_new_artefact(table, art);
@@ -169,10 +270,34 @@ uint8_t resolve_artefact_type(uint8_t *new, uint8_t *name)
 	return offset;
 }
 
+uint8_t resolve_artefact_binary(uint8_t *binary)
+{
+	if (!binary) return INVALID_ENUM;
+	if (!strcmp(binary, "executable")) return BIN_EXECUTABLE;
+	else if (!strcmp(binary, "shared")) return BIN_SHARED;
+	else if (!strcmp(binary, "static")) return BIN_STATIC;
+	else return INVALID_ENUM;
+}
+
+uint8_t resolve_artefact_mode(uint8_t *mode)
+{
+	if (!mode) return INVALID_ENUM;
+	if (!strcmp(mode, "debug")) return MODE_DEBUG;
+	else if (!strcmp(mode, "release")) return MODE_RELEASE;
+	else return INVALID_ENUM;
+}
+
+uint8_t resolve_compiler(uint8_t *compiler)
+{
+	if (!strcmp(compiler, "gcc")) return COMPILER_GCC;
+	else if (!strcmp(compiler, "clang")) return COMPILER_CLANG;
+	else return INVALID_ENUM;
+}
+
 artefact_t *new_artefact(uint8_t *name, uint8_t type)
 {
 	artefact_t *art = malloc(sizeof(artefact_t) * 1);
-	art->name = set_heap_string(name);
+	art->name = new_kstring(name);
 	art->type = type;
 
 	switch (type)
@@ -197,7 +322,31 @@ artefact_t *new_artefact(uint8_t *name, uint8_t type)
 
 void delete_artefact(artefact_t *art)
 {
-	free(art->name);
+	delete_kstring(art->name);
+
+	if (art->type == ARTEFACT_NATIVE)
+	{
+		delete_kstring(art->native.c_std);
+		delete_kstring(art->native.cxx_std);
+		delete_kstring(art->native.output);
+		delete_kstring(art->native.cflags);
+		delete_kstring(art->native.lflags);
+
+		delete_kstring_array(art->native.inc_paths);
+		delete_kstring_array(art->native.lib_paths);
+		delete_kstring_array(art->native.sources);
+		delete_kstring_array(art->native.defines);
+		delete_kstring_array(art->native.libs);
+	}
+
+	else if (art->type == ARTEFACT_CMAKE)
+	{
+		delete_kstring(art->cmake.source);
+		delete_kstring(art->cmake.generator);
+		delete_kstring(art->cmake.output);
+	}
+
+	else if (art->type == ARTEFACT_NATIVE) delete_kstring(art->make.flags);
 	free(art);
 }
 
@@ -239,6 +388,8 @@ int32_t main(int32_t argc, const int8_t **argv)
 	build_table_t *table = new_build_table(config_path);
 	parse_and_validate_config(table, config_path);
 	query_errors();
+
+	//printf(table->arts[0]->native.c_std);
 
 	delete_build_table(table);
 }

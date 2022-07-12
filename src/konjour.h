@@ -9,16 +9,19 @@
 
 #include "../vendor/tomlc99/toml.h"
 
-#define ARTEFACT_NATIVE  0
-#define ARTEFACT_CMAKE   6
-#define ARTEFACT_MAKE    5
+#define ARTEFACT_NATIVE 0
+#define ARTEFACT_CMAKE  6
+#define ARTEFACT_MAKE   5
 
-#define COMPILER_GCC     0
-#define COMPILER_CLANG   1
+#define COMPILER_GCC    0
+#define COMPILER_CLANG  1
 
-#define TYPE_EXECUTABLE 0
-#define TYPE_SHARED     1
-#define TYPE_STATIC     2
+#define BIN_EXECUTABLE  0
+#define BIN_SHARED      1
+#define BIN_STATIC      2
+
+#define MODE_RELEASE    0
+#define MODE_DEBUG      1
 
 #define INVALID_ENUM    0xFF
 
@@ -47,6 +50,26 @@ void throw_error(error_type_t type, int8_t *token);
 void query_errors(void);
 
 /*=======================================
+ *              KSTRINGS
+ *=======================================
+*/
+
+typedef struct kstring_t
+{
+	uint8_t *ptr;
+	uint64_t size;
+} kstring_t;
+
+typedef struct kstring_array_t
+{
+	kstring_t **elements;
+	uint64_t count;
+} kstring_array_t;
+
+kstring_t *new_kstring(uint8_t *chars);
+void delete_kstring(kstring_t *str);
+
+/*=======================================
  *             BUILD TABLE
  *=======================================
 */
@@ -54,26 +77,26 @@ void query_errors(void);
 typedef enum fields_t
 {
 	F_C_STD, F_CXX_STD, F_OUTPUT, F_CFLAGS, F_LFLAGS,
-	F_TYPE, F_MODE, 
+	F_BINARY, F_MODE, 
 	F_INC_PATHS, F_LIB_PATHS, F_SOURCES, F_DEFINES, F_LIBS
 } fields_t;
 
 typedef struct art_t
 {
-	uint8_t *c_std;
-	uint8_t *cxx_std;
-	uint8_t *output;
-	uint8_t *cflags;
-	uint8_t *lflags;
+	kstring_t *c_std;
+	kstring_t *cxx_std;
+	kstring_t *output;
+	kstring_t *cflags;
+	kstring_t *lflags;
 
-	uint8_t type;
+	uint8_t binary;
 	uint8_t mode;
 
-	toml_array_t *inc_paths;
-	toml_array_t *lib_paths;
-	toml_array_t *sources;
-	toml_array_t *defines;
-	toml_array_t *libs;
+	kstring_array_t *inc_paths;
+	kstring_array_t *lib_paths;
+	kstring_array_t *sources;
+	kstring_array_t *defines;
+	kstring_array_t *libs;
 
 	bool cpp_mode;
 	bool rebuild;
@@ -81,18 +104,19 @@ typedef struct art_t
 
 typedef struct cmake_art_t
 {
-	uint8_t *source;
-	uint8_t *build;
+	kstring_t *source;
+	kstring_t *generator;
+	kstring_t *output;
 } cmake_art_t;
 
 typedef struct make_art_t
 {
-	uint8_t *flags;
+	kstring_t *flags;
 } make_art_t;
 
 typedef struct artefact_t
 {
-	uint8_t *name;
+	kstring_t *name;
 	uint8_t type;
 
 	union 
@@ -117,10 +141,13 @@ typedef struct build_table_t
 build_table_t *new_build_table(uint8_t *path);
 void delete_build_table(build_table_t *table);
 void append_new_artefact(build_table_t *table, artefact_t *art);
-uint8_t resolve_compiler(uint8_t *compiler);
 void parse_and_validate_config(build_table_t *table, uint8_t *path);
 
 uint8_t resolve_artefact_type(uint8_t *new, uint8_t *name);
+uint8_t resolve_artefact_binary(uint8_t *binary);
+uint8_t resolve_artefact_mode(uint8_t *mode);
+uint8_t resolve_compiler(uint8_t *compiler);
+
 artefact_t *new_artefact(uint8_t *name, uint8_t type);
 void delete_artefact(artefact_t *art);
 
