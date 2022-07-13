@@ -10,11 +10,14 @@ static const uint8_t *ERROR_STRINGS[] =
 	"PARSING ERROR: no artefact definition for '%s'!\n",
 
 	"VALIDATION ERROR: supported compilers: 'gcc' and 'clang'!\n",
-	"VALIDATION ERROR: artefact '%s'; required global make prefix!\n",
+	"VALIDATION ERROR: make/cmake artefacts require a global make prefix!\n",
 	"VALIDATION ERROR: artefact '%s'; required source field!\n",
 	"VALIDATION ERROR: artefact '%s'; required generator field!\n",
 	"VALIDATION ERROR: make prefix could not be ran successfully!\n",
 	"VALIDATION ERROR: make sure cmake is installed and added to path!\n",
+	"VALIDATION ERROR: artefact '%s'; accepted binary types: 'executable', 'shared', and 'static'!\n",
+	"VALIDATION ERROR: artefact '%s'; accepted modes: 'debug' and 'release'!\n",
+	"VALIDATION ERROR: artefact '%s'; no compilation sources present!\n"
 };
 
 static const uint8_t BINARY_LIST[3][11] = {"executable", "shared", "static"};
@@ -55,12 +58,13 @@ void throw_error(error_type_t type, uint8_t *tok1, uint8_t *tok2)
 
 void delete_error(error_t *err)
 {
+	if (!err) return;
 	free(err->tok1);
 	free(err->tok2);
 	free(err);
 }
 
-void query_errors(void)
+uint64_t query_errors(void)
 {
 	for (uint64_t i = 0; i < g_error_count; i++)
 	{
@@ -73,7 +77,7 @@ void query_errors(void)
 		delete_error(g_errors[i]);
 	}
 
-	if (g_error_count) exit(-1);
+	return g_error_count;
 }
 
 /*=======================================
@@ -224,7 +228,6 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 
 			uint8_t new_name[999] = {0};
 			artefact_t *art = new_artefact(new_name, resolve_artefact_type(new_name, art_str.u.s));
-			printf("%d\n", art->type);
 
 			toml_table_t *art_table = toml_table_in(conf, new_name);
 
@@ -281,7 +284,7 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 
 void validate_table(build_table_t *table)
 {
-	if (table->compiler == INVALID_ENUM) add_error(E_UNSUPPORTED_COMPILER, "", "");
+	if (table->compiler == INVALID_ENUM)    add_error(E_UNSUPPORTED_COMPILER, "", "");
 	else if (table->compiler == UNSET_ENUM) table->compiler = COMPILER_GCC;
 
 	uint64_t make_flag = 0;
@@ -291,10 +294,9 @@ void validate_table(build_table_t *table)
 	{
 		if (table->arts[i]->type == ARTEFACT_CMAKE)
 		{
-			if (!table->make_prefix)              add_error(E_REQUIRED_MAKE_PREFIX, table->arts[i]->name->ptr, "");
 			if (!table->arts[i]->cmake.source)    add_error(E_NO_MAKE_SOURCE,       table->arts[i]->name->ptr, "");
 			if (!table->arts[i]->cmake.generator) add_error(E_NO_CMAKE_GENERATOR,   table->arts[i]->name->ptr, "");
-			if (!table->arts[i]->cmake.output)    new_kstring("bin");
+			if (!table->arts[i]->cmake.output)    table->arts[i]->cmake.output = new_kstring("bin");
 
 			cmake_flag = 1;
 			make_flag  = 1;
@@ -302,31 +304,49 @@ void validate_table(build_table_t *table)
 
 		else if (table->arts[i]->type == ARTEFACT_MAKE)
 		{
-			if (!table->make_prefix)             add_error(E_REQUIRED_MAKE_PREFIX,  table->arts[i]->name->ptr, "");
 			if (!table->arts[i]->make.source)    add_error(E_NO_MAKE_SOURCE,        table->arts[i]->name->ptr, "");
-			if (!table->arts[i]->make.flags)     new_kstring("");
+			if (!table->arts[i]->make.flags)     table->arts[i]->make.flags = new_kstring("");
 
 			make_flag = 1;
 		}
 
 		else if (table->arts[i]->type == ARTEFACT_NATIVE)
 		{
+			if (!table->arts[i]->native.c_std)   table->arts[i]->native.c_std   = new_kstring("11");
+			if (!table->arts[i]->native.cxx_std) table->arts[i]->native.cxx_std = new_kstring("11");
+			if (!table->arts[i]->native.output)  table->arts[i]->native.output  = new_kstring("bin");
+			if (!table->arts[i]->native.cflags)  table->arts[i]->native.cflags  = new_kstring("");
+			if (!table->arts[i]->native.lflags)  table->arts[i]->native.lflags  = new_kstring("");
 
+			if (table->arts[i]->native.binary == INVALID_ENUM)    add_error(E_INVALID_BINARY, table->arts[i]->name->ptr, "");
+			else if (table->arts[i]->native.binary == UNSET_ENUM) table->arts[i]->native.binary = BIN_EXECUTABLE;
+
+			if (table->arts[i]->native.mode == INVALID_ENUM)      add_error(E_INVALID_MODE,   table->arts[i]->name->ptr, "");
+			else if (table->arts[i]->native.mode == UNSET_ENUM)   table->arts[i]->native.mode = MODE_DEBUG;
+
+			if (table->arts[i]->native.sources->count < 1)        add_error(E_NO_SOURCES,     table->arts[i]->name->ptr, "");
 		}
 	}
 
-	if (make_flag && table->make_prefix)
+	if (make_flag)
 	{
-		uint8_t make_cmd[99] = {0};
-		sprintf(make_cmd, "%s %s", table->make_prefix->ptr, "--version");
-		if (system(make_cmd)) add_error(E_MAKE_NOT_FOUND, "", "");
-		system(CLR_EXEC);
+		if (!table->make_prefix) add_error(E_REQUIRED_MAKE_PREFIX, "", "");
+
+		else
+		{
+			uint8_t make_cmd[99] = {0};
+			sprintf(make_cmd, "%s %s", table->make_prefix->ptr, "--version");
+
+			printf("\nChecking for make...\n");
+			if (system(make_cmd)) add_error(E_MAKE_NOT_FOUND, "", "");
+		}
 	}
 
 	if (cmake_flag) 
 	{
+		printf("\nChecking for cmake...\n");
 		if (system("cmake --version")) add_error(E_CMAKE_NOT_FOUND, "", "");
-		system(CLR_EXEC);
+		printf("\n");
 	}
 }
 
@@ -460,12 +480,16 @@ int32_t main(int32_t argc, const int8_t **argv)
 
 	if (argc < 2) config_path = "./konjour.toml";
 	else config_path = (uint8_t *) argv[1];
+	system(CLR_EXEC);
 
 	build_table_t *table = new_build_table(config_path);
 	parse_config_into_table(table, config_path);
 	validate_table(table);
-	query_errors();
 
-	printf(table->make_prefix->ptr);
+	if (!query_errors())
+	{
+
+	}
+
 	delete_build_table(table);
 }

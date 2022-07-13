@@ -66,7 +66,7 @@ typedef enum error_type_t
 	E_MAKE_NOT_FOUND, E_CMAKE_NOT_FOUND,
 
 	//VALIDATION ERRORS: NATIVE
-
+	E_INVALID_BINARY, E_INVALID_MODE, E_NO_SOURCES
 } error_type_t;
 
 typedef struct error_t
@@ -79,7 +79,7 @@ typedef struct error_t
 void add_error(error_type_t type, uint8_t *tok1, uint8_t *tok2);
 void throw_error(error_type_t type, uint8_t *tok1, uint8_t *tok2);
 void delete_error(error_t *err);
-void query_errors(void);
+uint64_t query_errors(void);
 
 /*=======================================
  *              KSTRINGS

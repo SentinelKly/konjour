@@ -1,8 +1,8 @@
-KONJOUR_COMPILER = "gcc"
+KONJOUR_COMPILER    = "gcc"
 KONJOUR_MAKE_PREFIX = "mingw32-make"
-KONJOUR_VERBOSE = true
+KONJOUR_VERBOSE     = true
 
-artefacts = ["konjour", "cmake@test"]
+artefacts = ["konjour"]
 
 [konjour]
 	c_std   = "11"
@@ -12,6 +12,3 @@ artefacts = ["konjour", "cmake@test"]
 	output  = "bin"
 	
 	sources = ["src/konjour.c", "src/cfg_parser.c", "src/gcc_builder.c"]
-
-[test]
-	flags  = ""
