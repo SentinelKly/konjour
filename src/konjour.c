@@ -20,12 +20,14 @@ static const uint8_t *ERROR_STRINGS[] =
 	"VALIDATION ERROR: artefact '%s'; no compilation sources present!\n"
 };
 
-static const uint8_t BINARY_LIST[3][11] = {"executable", "shared", "static"};
-static const uint8_t NATIVE_FIELDS[12][10] = 
+static const uint8_t *NATIVE_FIELDS[] = 
 {
 	"c_std", "cxx_std", "output", "cflags", "lflags", "binary", "mode",
 	"inc_paths", "lib_paths", "sources", "defines", "libs"
 };
+
+static const uint8_t *BINARY_LIST[]    = {"executable", "shared", "static"};
+static const uint8_t *COMPILER_NAMES[] = {"gcc", "g++", "clang", "clang++"};
 
 static error_t **g_errors;
 static uint64_t g_error_count = 0;
@@ -205,9 +207,9 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 
 	table->make_prefix = new_kstring_from_toml(toml_string_in(conf, "KONJOUR_MAKE_PREFIX"));
 
-	toml_datum_t global_compiler = toml_string_in(conf, "KONJOUR_COMPILER");
+	toml_datum_t global_compiler            = toml_string_in(conf, "KONJOUR_COMPILER");
 	if (global_compiler.ok) table->compiler = resolve_compiler(string_to_lower(global_compiler.u.s));
-	else table->compiler = UNSET_ENUM;
+	else table->compiler                    = UNSET_ENUM;
 
 	toml_datum_t global_verbose = toml_bool_in(conf, "KONJOUR_VERBOSE");
 	if (global_verbose.ok)  table->verbose = global_verbose.u.b;
@@ -248,7 +250,7 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 			else if (art->type == ARTEFACT_MAKE)
 			{
 				art->make.source = new_kstring_from_toml(toml_string_in(art_table, "source"));
-				art->make.flags = new_kstring_from_toml(toml_string_in(art_table, "flags"));
+				art->make.flags  = new_kstring_from_toml(toml_string_in(art_table, "flags"));
 			}
 
 			else
@@ -287,8 +289,7 @@ void validate_table(build_table_t *table)
 	if (table->compiler == INVALID_ENUM)    add_error(E_UNSUPPORTED_COMPILER, "", "");
 	else if (table->compiler == UNSET_ENUM) table->compiler = COMPILER_GCC;
 
-	uint64_t make_flag = 0;
-	uint64_t cmake_flag = 0;
+	bool make_flag, cmake_flag = false;
 
 	for (uint64_t i = 0; i < table->count; i++)
 	{
@@ -354,7 +355,7 @@ uint8_t resolve_artefact_type(uint8_t *new, uint8_t *name)
 {
 	uint64_t offset = ARTEFACT_NATIVE;
 
-	if (contains_prefix(name, "cmake@")) offset = ARTEFACT_CMAKE;
+	if (contains_prefix(name, "cmake@"))     offset = ARTEFACT_CMAKE;
 	else if (contains_prefix(name, "make@")) offset = ARTEFACT_MAKE;
 
 	strcpy(new, name + offset);
@@ -363,33 +364,34 @@ uint8_t resolve_artefact_type(uint8_t *new, uint8_t *name)
 
 uint8_t resolve_artefact_binary(uint8_t *binary)
 {
-	if (!binary) return INVALID_ENUM;
-	if (!strcmp(binary, "executable")) return BIN_EXECUTABLE;
+	if (!binary)                        return INVALID_ENUM;
+	if (!strcmp(binary, "executable"))  return BIN_EXECUTABLE;
 	else if (!strcmp(binary, "shared")) return BIN_SHARED;
 	else if (!strcmp(binary, "static")) return BIN_STATIC;
-	else return INVALID_ENUM;
+	else                                return INVALID_ENUM;
 }
 
 uint8_t resolve_artefact_mode(uint8_t *mode)
 {
-	if (!mode) return INVALID_ENUM;
-	if (!strcmp(mode, "debug")) return MODE_DEBUG;
+	if (!mode)                         return INVALID_ENUM;
+	if (!strcmp(mode, "debug"))        return MODE_DEBUG;
 	else if (!strcmp(mode, "release")) return MODE_RELEASE;
-	else return INVALID_ENUM;
+	else                               return INVALID_ENUM;
 }
 
 uint8_t resolve_compiler(uint8_t *compiler)
 {
-	if (!strcmp(compiler, "gcc")) return COMPILER_GCC;
+	if (!compiler)                       return INVALID_ENUM;
+	if (!strcmp(compiler, "gcc"))        return COMPILER_GCC;
 	else if (!strcmp(compiler, "clang")) return COMPILER_CLANG;
-	else return INVALID_ENUM;
+	else                                 return INVALID_ENUM;
 }
 
 artefact_t *new_artefact(uint8_t *name, uint8_t type)
 {
 	artefact_t *art = malloc(sizeof(artefact_t) * 1);
-	art->name = new_kstring(name);
-	art->type = type;
+	art->name       = new_kstring(name);
+	art->type       = type;
 
 	switch (type)
 	{
@@ -447,6 +449,16 @@ void delete_artefact(artefact_t *art)
 }
 
 /*=======================================
+ *             BUILD TABLE
+ *=======================================
+*/
+
+void build_table_artefacts(build_table_t *table)
+{
+
+}
+
+/*=======================================
  *              UTILITIES
  *=======================================
 */
@@ -454,7 +466,7 @@ void delete_artefact(artefact_t *art)
 uint8_t *set_heap_string(uint8_t *str)
 {
 	uint8_t *hstr = malloc(sizeof(uint8_t) * strlen(str));
-	hstr = strcpy(hstr, str);
+	hstr          = strcpy(hstr, str);
 	return hstr;
 }
 
@@ -486,10 +498,6 @@ int32_t main(int32_t argc, const int8_t **argv)
 	parse_config_into_table(table, config_path);
 	validate_table(table);
 
-	if (!query_errors())
-	{
-
-	}
-
+	if (!query_errors()) build_table_artefacts(table);
 	delete_build_table(table);
 }

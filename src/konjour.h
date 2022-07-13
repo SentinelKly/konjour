@@ -14,7 +14,8 @@
 #define ARTEFACT_MAKE   0x05
 
 #define COMPILER_GCC    0x00
-#define COMPILER_CLANG  0x01
+#define COMPILER_CLANG  0x02
+#define CPP_OFFSET      0x01
 
 #define BIN_EXECUTABLE  0x00
 #define BIN_SHARED      0x01
@@ -184,6 +185,13 @@ uint8_t resolve_compiler(uint8_t *compiler);
 
 artefact_t *new_artefact(uint8_t *name, uint8_t type);
 void delete_artefact(artefact_t *art);
+
+/*=======================================
+ *             BUILD TABLE
+ *=======================================
+*/
+
+void build_table_artefacts(build_table_t *table);
 
 /*=======================================
  *              UTILITIES
