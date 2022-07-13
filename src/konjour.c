@@ -41,7 +41,7 @@ void add_error(error_type_t type, uint8_t *tok1, uint8_t *tok2)
 {
 	g_errors = realloc(g_errors, sizeof(error_t*) * (g_error_count + 1));
 
-	g_errors[g_error_count] = malloc(sizeof(error_t));
+	g_errors[g_error_count]       = malloc(sizeof(error_t));
 	g_errors[g_error_count]->tok1 = set_heap_string(tok1);
 	g_errors[g_error_count]->tok2 = set_heap_string(tok2);
 	g_errors[g_error_count]->type = type;
