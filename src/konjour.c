@@ -1,16 +1,24 @@
 #include "konjour.h"
 
-static const int8_t *ERROR_STRINGS[10] = 
+static const uint8_t *ERROR_STRINGS[] = 
 {
 	"FILE IO ERROR: '%s' is not a valid config path!\n",
+
 	"PARSING ERROR: %s\n",
 	"PARSING ERROR: must have 'artefacts' array defined!\n",
 	"PARSING ERROR: nothing defined in 'artefacts'!\n",
 	"PARSING ERROR: no artefact definition for '%s'!\n",
+
+	"VALIDATION ERROR: supported compilers: 'gcc' and 'clang'!\n",
+	"VALIDATION ERROR: artefact '%s'; required global make prefix!\n",
+	"VALIDATION ERROR: artefact '%s'; required source field!\n",
+	"VALIDATION ERROR: artefact '%s'; required generator field!\n",
+	"VALIDATION ERROR: make prefix could not be ran successfully!\n",
+	"VALIDATION ERROR: make sure cmake is installed and added to path!\n",
 };
 
-static const int8_t BINARY_LIST[3][11] = {"executable", "shared", "static"};
-static const int8_t NATIVE_FIELDS[12][10] = 
+static const uint8_t BINARY_LIST[3][11] = {"executable", "shared", "static"};
+static const uint8_t NATIVE_FIELDS[12][10] = 
 {
 	"c_std", "cxx_std", "output", "cflags", "lflags", "binary", "mode",
 	"inc_paths", "lib_paths", "sources", "defines", "libs"
@@ -24,20 +32,31 @@ static uint64_t g_error_count = 0;
  *=======================================
 */
 
-void add_error(error_type_t type, uint8_t *token)
+void add_error(error_type_t type, uint8_t *tok1, uint8_t *tok2)
 {
 	g_errors = realloc(g_errors, sizeof(error_t*) * (g_error_count + 1));
 
 	g_errors[g_error_count] = malloc(sizeof(error_t));
-	g_errors[g_error_count]->tok = set_heap_string(token);
+	g_errors[g_error_count]->tok1 = set_heap_string(tok1);
+	g_errors[g_error_count]->tok2 = set_heap_string(tok2);
 	g_errors[g_error_count]->type = type;
 
 	g_error_count ++;
 }
 
+void throw_error(error_type_t type, uint8_t *tok1, uint8_t *tok2)
+{
+	int8_t errmsg[9999] = {0};
+	sprintf(errmsg, ERROR_STRINGS[type], tok1, tok2);
+	
+	printf(errmsg);
+	exit(type);
+}
+
 void delete_error(error_t *err)
 {
-	free(err->tok);
+	free(err->tok1);
+	free(err->tok2);
 	free(err);
 }
 
@@ -48,22 +67,13 @@ void query_errors(void)
 		int8_t errmsg[9999] = {0};
 		error_t *handle = g_errors[i];
 
-		sprintf(errmsg, ERROR_STRINGS[handle->type], handle->tok);
+		sprintf(errmsg, ERROR_STRINGS[handle->type], handle->tok1, handle->tok2);
 		printf(errmsg);
 
 		delete_error(g_errors[i]);
 	}
 
 	if (g_error_count) exit(-1);
-}
-
-void throw_error(error_type_t type, int8_t *token)
-{
-	int8_t errmsg[9999] = {0};
-	sprintf(errmsg, ERROR_STRINGS[type], token);
-	
-	printf(errmsg);
-	exit(type);
 }
 
 /*=======================================
@@ -174,28 +184,31 @@ void delete_build_table(build_table_t *table)
 void append_new_artefact(build_table_t *table, artefact_t *art)
 {
 	table->count ++;
-	table->arts = realloc(table->arts, table->count);
+	table->arts = realloc(table->arts, sizeof(artefact_t *) * table->count);
 	table->arts[table->count - 1] = art;
 }
 
 void parse_config_into_table(build_table_t *table, uint8_t *path)
 {
 	FILE *fp = fopen(path, "r");
-	if (!fp) throw_error(E_NULL_FILE, path);
+	if (!fp) throw_error(E_NULL_FILE, path, "");
 
 	uint8_t error_buffer[200] = {0};
 	toml_table_t* conf = toml_parse_file(fp, error_buffer, sizeof(error_buffer));
 	fclose(fp);
 
-	if (!conf) throw_error(E_INVALID_FILE, error_buffer);
+	if (!conf) throw_error(E_INVALID_FILE, error_buffer, "");
 
 	table->make_prefix = new_kstring_from_toml(toml_string_in(conf, "KONJOUR_MAKE_PREFIX"));
-	toml_array_t *artefacts      = toml_array_in(conf, "artefacts");
-	toml_datum_t global_compiler = toml_string_in(conf, "KONJOUR_COMPILER");
-	toml_datum_t global_verbose  = toml_bool_in(conf, "KONJOUR_VERBOSE");
 
+	toml_datum_t global_compiler = toml_string_in(conf, "KONJOUR_COMPILER");
 	if (global_compiler.ok) table->compiler = resolve_compiler(string_to_lower(global_compiler.u.s));
-	if (global_verbose.ok)  table->verbose  = global_verbose.u.b;
+	else table->compiler = UNSET_ENUM;
+
+	toml_datum_t global_verbose = toml_bool_in(conf, "KONJOUR_VERBOSE");
+	if (global_verbose.ok)  table->verbose = global_verbose.u.b;
+
+	toml_array_t *artefacts = toml_array_in(conf, "artefacts");
 
 	if (artefacts)
 	{
@@ -205,18 +218,19 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 
 			if (!art_str.ok)
 			{
-				if (i < 1) add_error(E_NO_ARTEFACTS, "");
+				if (i < 1) add_error(E_NO_ARTEFACTS, "", "");
 				break;
 			}
 
 			uint8_t new_name[999] = {0};
 			artefact_t *art = new_artefact(new_name, resolve_artefact_type(new_name, art_str.u.s));
+			printf("%d\n", art->type);
 
 			toml_table_t *art_table = toml_table_in(conf, new_name);
 
 			if (!art_table)
 			{
-				add_error(E_NO_ARTEFACT, art_str.u.s);
+				add_error(E_NO_ARTEFACT, art_str.u.s, "");
 				delete_artefact(art);
 				continue;
 			}
@@ -229,7 +243,10 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 			}
 
 			else if (art->type == ARTEFACT_MAKE)
+			{
+				art->make.source = new_kstring_from_toml(toml_string_in(art_table, "source"));
 				art->make.flags = new_kstring_from_toml(toml_string_in(art_table, "flags"));
+			}
 
 			else
 			{
@@ -241,9 +258,11 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 
 				toml_datum_t art_binary = toml_string_in(art_table, NATIVE_FIELDS[F_BINARY]);
 				if (art_binary.ok) art->native.binary = resolve_artefact_binary(art_binary.u.s);
+				else art->native.binary = UNSET_ENUM;
 
-				toml_datum_t art_mode = toml_string_in(art_table, NATIVE_FIELDS[F_MODE]);
+				toml_datum_t art_mode   = toml_string_in(art_table, NATIVE_FIELDS[F_MODE]);
 				if (art_mode.ok) art->native.mode = resolve_artefact_mode(art_mode.u.s);
+				else art->native.mode   = UNSET_ENUM;
 
 				art->native.inc_paths = new_kstring_array_from_toml(toml_array_in(art_table, NATIVE_FIELDS[F_INC_PATHS]));
 				art->native.lib_paths = new_kstring_array_from_toml(toml_array_in(art_table, NATIVE_FIELDS[F_LIB_PATHS]));
@@ -256,13 +275,59 @@ void parse_config_into_table(build_table_t *table, uint8_t *path)
 		}
 	}
 
-	else add_error(E_NO_ARTEFACT_ARRAY, "");
+	else add_error(E_NO_ARTEFACT_ARRAY, "", "");
 	toml_free(conf);
 }
 
 void validate_table(build_table_t *table)
 {
-	
+	if (table->compiler == INVALID_ENUM) add_error(E_UNSUPPORTED_COMPILER, "", "");
+	else if (table->compiler == UNSET_ENUM) table->compiler = COMPILER_GCC;
+
+	uint64_t make_flag = 0;
+	uint64_t cmake_flag = 0;
+
+	for (uint64_t i = 0; i < table->count; i++)
+	{
+		if (table->arts[i]->type == ARTEFACT_CMAKE)
+		{
+			if (!table->make_prefix)              add_error(E_REQUIRED_MAKE_PREFIX, table->arts[i]->name->ptr, "");
+			if (!table->arts[i]->cmake.source)    add_error(E_NO_MAKE_SOURCE,       table->arts[i]->name->ptr, "");
+			if (!table->arts[i]->cmake.generator) add_error(E_NO_CMAKE_GENERATOR,   table->arts[i]->name->ptr, "");
+			if (!table->arts[i]->cmake.output)    new_kstring("bin");
+
+			cmake_flag = 1;
+			make_flag  = 1;
+		}
+
+		else if (table->arts[i]->type == ARTEFACT_MAKE)
+		{
+			if (!table->make_prefix)             add_error(E_REQUIRED_MAKE_PREFIX,  table->arts[i]->name->ptr, "");
+			if (!table->arts[i]->make.source)    add_error(E_NO_MAKE_SOURCE,        table->arts[i]->name->ptr, "");
+			if (!table->arts[i]->make.flags)     new_kstring("");
+
+			make_flag = 1;
+		}
+
+		else if (table->arts[i]->type == ARTEFACT_NATIVE)
+		{
+
+		}
+	}
+
+	if (make_flag && table->make_prefix)
+	{
+		uint8_t make_cmd[99] = {0};
+		sprintf(make_cmd, "%s %s", table->make_prefix->ptr, "--version");
+		if (system(make_cmd)) add_error(E_MAKE_NOT_FOUND, "", "");
+		system(CLR_EXEC);
+	}
+
+	if (cmake_flag) 
+	{
+		if (system("cmake --version")) add_error(E_CMAKE_NOT_FOUND, "", "");
+		system(CLR_EXEC);
+	}
 }
 
 uint8_t resolve_artefact_type(uint8_t *new, uint8_t *name)
@@ -352,7 +417,12 @@ void delete_artefact(artefact_t *art)
 		delete_kstring(art->cmake.output);
 	}
 
-	else if (art->type == ARTEFACT_NATIVE) delete_kstring(art->make.flags);
+	else if (art->type == ARTEFACT_NATIVE) 
+	{
+		delete_kstring(art->make.source);
+		delete_kstring(art->make.flags);
+	}
+
 	free(art);
 }
 

@@ -24,22 +24,26 @@
 #define MODE_DEBUG      0x01
 
 #define INVALID_ENUM    0xFF
+#define UNSET_ENUM      0x2A
 
 #if defined(_WIN64)
-	#define SO_EXT "dll"
-	#define EX_EXT "exe"
-	#define RM_EXEC "rmdir /Q /s "
-	#define DIR_SEP "\\"
+	#define SO_EXT   "dll"
+	#define EX_EXT   "exe"
+	#define RM_EXEC  "rmdir /Q /s "
+	#define CLR_EXEC "cls"
+	#define DIR_SEP  "\\"
 #elif defined(_APPLE_)
-	#define SO_EXT "dylib"
-	#define EX_EXT ""
-	#define RM_EXEC "rm -rf ./"
-	#define DIR_SEP "/"
+	#define SO_EXT   "dylib"
+	#define EX_EXT   ""
+	#define RM_EXEC  "rm -rf ./"
+	#define CLR_EXEC "clear"
+	#define DIR_SEP  "/"
 #else
-	#define SO_EXT "so"
-	#define EX_EXT ""
-	#define RM_EXEC "rm -rf ./"
-	#define DIR_SEP "/"
+	#define SO_EXT   "so"
+	#define EX_EXT   ""
+	#define RM_EXEC  "rm -rf ./"
+	#define CLR_EXEC "clear"
+	#define DIR_SEP  "/"
 #endif
 
 typedef enum {false, true} bool;
@@ -51,19 +55,30 @@ typedef enum {false, true} bool;
 
 typedef enum error_type_t
 {
-	E_NULL_FILE, E_INVALID_FILE, E_NO_ARTEFACT_ARRAY, E_NO_ARTEFACTS,
-	E_NO_ARTEFACT,
+	//REQUIRED IMMEDIATE THROWS
+	E_NULL_FILE, E_INVALID_FILE, 
+
+	//MISSING VITAL INFORMATION
+	E_NO_ARTEFACT_ARRAY, E_NO_ARTEFACTS, E_NO_ARTEFACT,
+
+	//VALIDATION ERRORS: TABLE, CMAKE, AND MAKE
+	E_UNSUPPORTED_COMPILER, E_REQUIRED_MAKE_PREFIX, E_NO_MAKE_SOURCE, E_NO_CMAKE_GENERATOR,
+	E_MAKE_NOT_FOUND, E_CMAKE_NOT_FOUND,
+
+	//VALIDATION ERRORS: NATIVE
+
 } error_type_t;
 
 typedef struct error_t
 {
 	error_type_t type;
-	int8_t *tok;
+	uint8_t *tok1;
+	uint8_t *tok2;
 } error_t;
 
-void add_error(error_type_t type, uint8_t *token);
+void add_error(error_type_t type, uint8_t *tok1, uint8_t *tok2);
+void throw_error(error_type_t type, uint8_t *tok1, uint8_t *tok2);
 void delete_error(error_t *err);
-void throw_error(error_type_t type, int8_t *token);
 void query_errors(void);
 
 /*=======================================
@@ -128,6 +143,7 @@ typedef struct cmake_art_t
 
 typedef struct make_art_t
 {
+	kstring_t *source;
 	kstring_t *flags;
 } make_art_t;
 
