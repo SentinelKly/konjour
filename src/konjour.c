@@ -336,18 +336,16 @@ void validate_table(build_table_t *table)
 		else
 		{
 			uint8_t make_cmd[99] = {0};
-			sprintf(make_cmd, "%s %s", table->make_prefix->ptr, "--version");
-
-			printf("\nChecking for make...\n");
+			sprintf(make_cmd, "%s %s %s", table->make_prefix->ptr, "--version", OUT_NULL);
 			if (system(make_cmd)) add_error(E_MAKE_NOT_FOUND, "", "");
 		}
 	}
 
 	if (cmake_flag) 
 	{
-		printf("\nChecking for cmake...\n");
-		if (system("cmake --version")) add_error(E_CMAKE_NOT_FOUND, "", "");
-		printf("\n");
+		uint8_t make_cmd[99] = {0};
+		sprintf(make_cmd, "cmake --version %s", OUT_NULL);
+		if (system(make_cmd)) add_error(E_CMAKE_NOT_FOUND, "", "");
 	}
 }
 

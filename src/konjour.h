@@ -30,21 +30,24 @@
 #if defined(_WIN64)
 	#define SO_EXT   "dll"
 	#define EX_EXT   "exe"
-	#define RM_EXEC  "rmdir /Q /s "
+	#define RM_EXEC  "rmdir /Q /s"
 	#define CLR_EXEC "cls"
 	#define DIR_SEP  "\\"
+	#define OUT_NULL "> nul"
 #elif defined(_APPLE_)
 	#define SO_EXT   "dylib"
 	#define EX_EXT   ""
 	#define RM_EXEC  "rm -rf ./"
 	#define CLR_EXEC "clear"
 	#define DIR_SEP  "/"
+	#define OUT_NULL "> /dev/null"
 #else
 	#define SO_EXT   "so"
 	#define EX_EXT   ""
 	#define RM_EXEC  "rm -rf ./"
 	#define CLR_EXEC "clear"
 	#define DIR_SEP  "/"
+	#define OUT_NULL "> /dev/null"
 #endif
 
 typedef enum {false, true} bool;
