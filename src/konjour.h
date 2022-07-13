@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <pthread.h>
+#include <time.h>
 
 #include "../vendor/tomlc99/toml.h"
 
@@ -186,14 +188,18 @@ uint8_t resolve_artefact_binary(uint8_t *binary);
 uint8_t resolve_artefact_mode(uint8_t *mode);
 uint8_t resolve_compiler(uint8_t *compiler);
 
+const uint8_t *artefact_binary_to_string(uint8_t binary);
+const uint8_t *artefact_mode_to_string(uint8_t mode);
+
 artefact_t *new_artefact(uint8_t *name, uint8_t type);
 void delete_artefact(artefact_t *art);
+void print_artefact(artefact_t *art, bool verbose);
 
 /*=======================================
- *             BUILD TABLE
+ *      COMPILATION AND EXECUTION
  *=======================================
 */
-
+void print_out_table(build_table_t *table);
 void build_table_artefacts(build_table_t *table);
 
 /*=======================================

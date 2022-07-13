@@ -27,6 +27,7 @@ static const uint8_t *NATIVE_FIELDS[] =
 };
 
 static const uint8_t *BINARY_LIST[]    = {"executable", "shared", "static"};
+static const uint8_t *MODE_LIST[]      = {"debug", "release"};
 static const uint8_t *COMPILER_NAMES[] = {"gcc", "g++", "clang", "clang++"};
 
 static error_t **g_errors;
@@ -128,6 +129,18 @@ void delete_kstring_array(kstring_array_t *array)
     if (!array) return;
 	for (uint64_t i = 0; i < array->count; i++) delete_kstring(array->elements[i]);
 	free(array);
+}
+
+void print_kstring_array(kstring_array_t *array)
+{
+	if (!array) return;
+	else if (array->count < 1) printf("none");
+
+	else 
+	{
+		for (uint64_t i = 0; i < array->count; i++)
+			printf("%s ", array->elements[i]->ptr);
+	}
 }
 
 kstring_t *new_kstring(uint8_t *chars)
@@ -385,6 +398,29 @@ uint8_t resolve_compiler(uint8_t *compiler)
 	else                                 return INVALID_ENUM;
 }
 
+const uint8_t *artefact_binary_to_string(uint8_t binary)
+{
+	switch (binary)
+	{
+		case BIN_EXECUTABLE:
+			return BINARY_LIST[0];
+			break;
+
+		case BIN_SHARED:
+			return BINARY_LIST[1];
+			break;
+
+		case BIN_STATIC:
+			return BINARY_LIST[2];
+			break;
+	}
+}
+
+const uint8_t *artefact_mode_to_string(uint8_t mode)
+{
+	return MODE_LIST[mode];
+}
+
 artefact_t *new_artefact(uint8_t *name, uint8_t type)
 {
 	artefact_t *art = malloc(sizeof(artefact_t) * 1);
@@ -446,10 +482,83 @@ void delete_artefact(artefact_t *art)
 	free(art);
 }
 
+void print_artefact(artefact_t *art, bool verbose)
+{
+	printf("artefact:      %s\n", art->name->ptr);
+
+	if (art->type == ARTEFACT_CMAKE)
+	{
+		printf("cmake source: %s\ncmake generator: %s\ncmake output : %s\n", 
+		art->cmake.source->ptr, art->cmake.generator->ptr, art->cmake.output->ptr);
+	}
+
+	else if (art->type == ARTEFACT_MAKE)
+	{
+		printf("make source: %s\nmake flags: %s\n", 
+		art->make.source->ptr, art->make.flags->ptr);
+	}
+
+	else if (art->type == ARTEFACT_NATIVE)
+	{
+		if (verbose)
+		{
+			printf("c standard:    %s\ncxx standard:  %s\noutput:        %s\ncompile flags: %s\n"
+			"link flags:    %s\nbinary:        %s\nrelease mode:  %s\n",
+
+			art->native.c_std->ptr, art->native.cxx_std->ptr, art->native.output->ptr, 
+			(strcmp(art->native.cflags->ptr, "")) ? art->native.cflags->ptr : "none", 
+			(strcmp(art->native.lflags->ptr, "")) ? art->native.lflags->ptr : "none",
+			artefact_binary_to_string(art->native.binary), artefact_mode_to_string(art->native.mode));
+
+			printf("include paths: ");
+			print_kstring_array(art->native.inc_paths);
+			printf("\n");
+
+			printf("library paths: ");
+			print_kstring_array(art->native.lib_paths);
+			printf("\n");
+
+			printf("sources:       ");
+			print_kstring_array(art->native.sources);
+			printf("\n");
+
+			printf("defines:       ");
+			print_kstring_array(art->native.defines);
+			printf("\n");
+
+			printf("libraries:     ");
+			print_kstring_array(art->native.libs);
+			printf("\n");
+		}
+
+		else
+		{
+			printf("c standard:    %s\ncxx standard:  %s\noutput:        %s\nbinary:        %s\nrelease mode:  %s\n",
+			art->native.c_std->ptr, art->native.cxx_std->ptr, art->native.output->ptr,
+			artefact_binary_to_string(art->native.binary), artefact_mode_to_string(art->native.mode));
+		}
+	}
+
+	printf("\n");
+}
+
 /*=======================================
- *             BUILD TABLE
+ *      COMPILATION AND EXECUTION
  *=======================================
 */
+
+void print_out_table(build_table_t *table)
+{
+	printf("-- global settings --\n");
+	printf("\ncompiler:    %s\nmake prefix: %s\nverbose:     %s\n",
+	COMPILER_NAMES[table->compiler], (table->make_prefix) ? table->make_prefix->ptr : "none",
+	(table->verbose ? "true" : "false"));
+
+	printf("\n-- Preparing to summon the following artefacts --\n\n");
+
+	for (uint64_t i = 0; i < table->count; i++)
+		print_artefact(table->arts[i], table->verbose);
+}
 
 void build_table_artefacts(build_table_t *table)
 {
@@ -496,6 +605,10 @@ int32_t main(int32_t argc, const int8_t **argv)
 	parse_config_into_table(table, config_path);
 	validate_table(table);
 
-	if (!query_errors()) build_table_artefacts(table);
+	if (!query_errors()) 
+	{
+		print_out_table(table);
+		build_table_artefacts(table);
+	}
 	delete_build_table(table);
 }
