@@ -1,8 +1,6 @@
 KONJOUR_COMPILER    = "gcc"
-KONJOUR_MAKE_PREFIX = "mingw32-make"
-KONJOUR_VERBOSE     = true
 
-artefacts = ["konjour", "konjour2"]
+artefacts = ["konjour", "lib1", "lib2"]
 
 [konjour]
 	c_std   = "11"
@@ -13,6 +11,10 @@ artefacts = ["konjour", "konjour2"]
 	
 	sources = ["src/konjour.c", "src/cfg_parser.c"]
 
-[konjour2]
+[lib1]
+	sources = ["src/fake.c"]
+	libs    = ["lib2"]
+
+[lib2]
 	binary  = "static"
 	sources = ["src/konjour.c", "src/cfg_parser.c"]
