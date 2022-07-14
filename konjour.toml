@@ -1,6 +1,6 @@
 KONJOUR_COMPILER    = "gcc"
 
-artefacts = ["konjour", "lib1", "lib2"]
+artefacts = ["konjour", "lib1", "lib2", "lib3", "lib4"]
 
 [konjour]
 	c_std   = "11"
@@ -10,6 +10,7 @@ artefacts = ["konjour", "lib1", "lib2"]
 	output  = "bin"
 	
 	sources = ["src/konjour.c", "src/cfg_parser.c"]
+	libs    = ["lib1"]
 
 [lib1]
 	sources = ["src/fake.c"]
@@ -18,3 +19,11 @@ artefacts = ["konjour", "lib1", "lib2"]
 [lib2]
 	binary  = "static"
 	sources = ["src/konjour.c", "src/cfg_parser.c"]
+
+[lib3]
+	sources = ["src/konjour.c", "src/cfg_parser.c"]
+	libs = ["konjour"]
+
+[lib4]
+	sources = ["src/konjour.c", "src/cfg_parser.c"]
+	libs = ["lib3"]

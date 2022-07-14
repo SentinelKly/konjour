@@ -1,24 +1,12 @@
 #include "konjour.hh"
 
-static const std::string LOG_LEVELS[] = {"ERROR: ", "WARN: ", "INFO: "};
+static const std::string COMPILERS[]  = {"gcc", "g++", "clang", "clang++"};
 
 static const std::string FIELDS[] = 
 {
 	"c_std", "cxx_std", "output", "cflags", "lflags", "binary", "mode",
 	"inc_paths", "lib_paths", "sources", "defines", "libs"
 };
-
-void logMessage(LogType type, const std::string& message, ...)
-{
-	char buffer[999] = {};
-	std::va_list parseArgs;
-		
-	va_start(parseArgs, message);
-	std::vsnprintf(buffer, 999, message.c_str(), parseArgs);
-	va_end(parseArgs);
-
-	std::cout << LOG_LEVELS[(uint8) type] << buffer << std::endl;
-}
 
 void Artefact::print()
 {
@@ -32,23 +20,49 @@ void Artefact::print()
 
 BuildTable::~BuildTable()
 {
-	for (auto const& art : this->m_SortedArtefacts)
-		delete art.second;
+
 
 	m_SortedArtefacts.clear();
 }
 
-void BuildTable::sortArtefactsIntoMap()
+int compareArteMap(std::pair<std::string, Artefact *>& a1, std::pair<std::string, Artefact *>& a2)
 {
-	for (auto const& art : this->m_Artefacts)
-		this->m_SortedArtefacts[art.second->m_Priority] = art.second;
-
-	m_Artefacts.clear();
+	return a1.second->m_Priority < a2.second->m_Priority;
 }
 
-void BuildTable::addArtefact(Artefact *art)
+void BuildTable::sortArtefactsIntoMap()
 {
-	this->m_Artefacts[art->m_Name] = art;
+	for (auto& arte : this->m_Artefacts)
+	{
+		for (auto& i : arte.second->m_VectorFields[FieldType::LIBS])
+		{
+			//m_Artefacts.at(i)->m_Priority += (1 + arte.second->m_Priority);
+
+			for (auto& ii : this->m_Artefacts)
+			{
+				if (!i.compare(ii.first)) m_Artefacts[ii.first]->m_Priority += (1 + arte.second->m_Priority);
+			}
+		}
+	}
+
+	std::vector<std::pair<std::string, Artefact *>> A;
+
+	for (auto& it : m_Artefacts) 
+	{
+		A.push_back(it);
+	}
+
+	std::sort(A.begin(), A.end(), compareArteMap);
+
+	for (auto& i : A)
+	{
+		std::cout << i.first << ": " << i.second->m_Priority << std::endl;
+	}
+}
+
+void BuildTable::addArtefact(Artefact *arte)
+{
+	this->m_Artefacts[arte->m_Name] = arte;
 }
 
 void BuildTable::parseConfiguration(std::string& path)
@@ -58,13 +72,13 @@ void BuildTable::parseConfiguration(std::string& path)
 	try 
 	{
 		auto config = toml::parse(path);
-		std::string globalCompiler = toml::find_or<std::string>(config, "KONJOUR_COMPILER", "gcc");
+		this->m_Compiler = toml::find_or<std::string>(config, "KONJOUR_COMPILER", "gcc");
 		std::vector<std::string> artefactList = toml::find<std::vector<std::string>>(config, "artefacts");
 
 		if (artefactList.size() < 1) 
 		{
-			std::cerr << toml::format_error("[error] no artefacts are defined!",
-			config.at("artefacts"), "at least one artefact required.") << std::endl;
+			std::cerr << toml::format_error("[error] no artefacts are defined",
+			config.at("artefacts"), "at least one artefact required") << std::endl;
 
 			this->m_ErrorFlag = true;
 		}
@@ -72,56 +86,93 @@ void BuildTable::parseConfiguration(std::string& path)
 		for (auto i : artefactList)
 		{
 			const auto& arteTable = toml::find(config, i);
+			auto arte = new Artefact(i);
 
-			auto art = new Artefact(i);
-			art->m_StringFields[FieldType::C_STD]   = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::C_STD]   , "11");
-			art->m_StringFields[FieldType::CXX_STD] = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CXX_STD] , "11");
-			art->m_StringFields[FieldType::OUTPUT]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::OUTPUT]  , "bin");
-			art->m_StringFields[FieldType::CFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CFLAGS]  , "");
-			art->m_StringFields[FieldType::LFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::LFLAGS]  , "");
-			art->m_StringFields[FieldType::BINARY]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::BINARY]  , "executable");
-			art->m_StringFields[FieldType::MODE]    = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::MODE]    , "debug");
+			arte->m_StringFields[FieldType::C_STD]   = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::C_STD]   , "11");
+			arte->m_StringFields[FieldType::CXX_STD] = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CXX_STD] , "11");
+			arte->m_StringFields[FieldType::OUTPUT]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::OUTPUT]  , "bin");
+			arte->m_StringFields[FieldType::CFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CFLAGS]  , "");
+			arte->m_StringFields[FieldType::LFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::LFLAGS]  , "");
+			arte->m_StringFields[FieldType::BINARY]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::BINARY]  , "executable");
+			arte->m_StringFields[FieldType::MODE]    = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::MODE]    , "debug");
+
+			if (arte->m_StringFields[FieldType::BINARY].compare("executable") && 
+				arte->m_StringFields[FieldType::BINARY].compare("shared")     &&
+				arte->m_StringFields[FieldType::BINARY].compare("static"))
+			{
+				std::cerr << toml::format_error("[error] invalid binary type",
+				arteTable.at(FIELDS[(uint8) FieldType::BINARY]), "must be 'executable', 'shared', or 'static'") << std::endl;
+
+				this->m_ErrorFlag = true;
+			}
+
+			if (arte->m_StringFields[FieldType::MODE].compare("debug") &&
+				arte->m_StringFields[FieldType::MODE].compare("release"))
+			{
+				std::cerr << toml::format_error("[error] invalid binary type",
+				arteTable.at(FIELDS[(uint8) FieldType::BINARY]), "must be 'executable', 'shared', or 'static'") << std::endl;
+
+				this->m_ErrorFlag = true;
+			}
+
+			arte->m_VectorFields[FieldType::SOURCES] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::SOURCES]);
 
 			if (arteTable.contains(FIELDS[(uint8) FieldType::INC_PATHS]))
-				art->m_VectorFields[FieldType::INC_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::INC_PATHS]);
+				arte->m_VectorFields[FieldType::INC_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::INC_PATHS]);
 			
 			if (arteTable.contains(FIELDS[(uint8) FieldType::LIB_PATHS]))
-				art->m_VectorFields[FieldType::LIB_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIB_PATHS]);
-			
-			art->m_VectorFields[FieldType::SOURCES] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::SOURCES]);
+				arte->m_VectorFields[FieldType::LIB_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIB_PATHS]);
 
 			if (arteTable.contains(FIELDS[(uint8) FieldType::DEFINES]))
-				art->m_VectorFields[FieldType::DEFINES]   = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::DEFINES]);
+				arte->m_VectorFields[FieldType::DEFINES]   = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::DEFINES]);
 
 			if (arteTable.contains(FIELDS[(uint8) FieldType::LIBS]))
-				art->m_VectorFields[FieldType::LIBS]      = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIBS]);
+				arte->m_VectorFields[FieldType::LIBS]      = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIBS]);
 
-			this->addArtefact(art);
+			this->addArtefact(arte);
 		}
 	}
 	
 	catch (std::exception& e) 
 	{
-		LOG_ERROR(e.what());
+		std::cerr << e.what() << std::endl;
 		this->m_ErrorFlag = true;
 	}
 }
 
 void BuildTable::printContents()
 {
-	for (auto arte : this->m_Artefacts)
-	{
-		arte.second->print();
-	}
+	std::cout << "--Konjour configuration--\ncompiler: " << this->m_Compiler
+	<< "\n\n--Preparing to summon the following artefacts--\n" << std::endl;
+
+	for (const auto& arte : this->m_Artefacts) arte.second->print();
+}
+
+void BuildTable::buildArtefacts()
+{
+
+}
+
+void BuildTable::compileObject(Artefact *arte)
+{
+
 }
 
 int32 main(int32 argc, char8 **argv)
 {
 	std::string configPath = (argc > 1) ? argv[1] : "./konjour.toml";
+	std::cout << std::endl;
 
 	auto table = new BuildTable();
 	table->parseConfiguration(configPath);
-	table->printContents();
+
+	if (!table->m_ErrorFlag)
+	{
+		table->sortArtefactsIntoMap();
+		table->printContents();
+		table->buildArtefacts();
+	}
+
 	delete table;
 	return 0;
 }

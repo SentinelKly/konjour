@@ -1,10 +1,9 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
-#include <cstdarg>
+#include <thread>
 #include <map>
 
 #include "../vendor/toml.hpp"
@@ -21,9 +20,28 @@ using uint64 = unsigned long long;
 
 using char8  = char;
 
-#define LOG_ERROR(x, ...) logMessage(LogType::ERROR, x, ##__VA_ARGS__)
-#define LOG_WARN(x, ...)  logMessage(LogType::WARN , x, ##__VA_ARGS__)
-#define LOG_INFO(x, ...)  logMessage(LogType::INFO , x, ##__VA_ARGS__)
+#if defined(_WIN64)
+	#define SO_EXT   "dll"
+	#define EX_EXT   "exe"
+	#define RM_EXEC  "rmdir /Q /s"
+	#define CLR_EXEC "cls"
+	#define DIR_SEP  "\\"
+	#define OUT_NULL "> nul"
+#elif defined(_APPLE_)
+	#define SO_EXT   "dylib"
+	#define EX_EXT   ""
+	#define RM_EXEC  "rm -rf ./"
+	#define CLR_EXEC "clear"
+	#define DIR_SEP  "/"
+	#define OUT_NULL "> /dev/null"
+#else
+	#define SO_EXT   "so"
+	#define EX_EXT   ""
+	#define RM_EXEC  "rm -rf ./"
+	#define CLR_EXEC "clear"
+	#define DIR_SEP  "/"
+	#define OUT_NULL "> /dev/null"
+#endif
 
 enum class FieldType: uint8
 {
@@ -34,21 +52,16 @@ enum class FieldType: uint8
 	INC_PATHS, LIB_PATHS, SOURCES, DEFINES, LIBS
 };
 
-enum class LogType : int8 
-{
-	ERROR, WARN, INFO
-};
-
-void logMessage(LogType type, const std::string& message, ...);
-
 struct Artefact
 {
 	public:
 		std::unordered_map<FieldType, std::string> m_StringFields;
 		std::unordered_map<FieldType, std::vector<std::string>> m_VectorFields;
-
 		std::string m_Name;
+
+		bool m_CppMode = false;
 		uint64 m_Priority = 0;
+
 
 	public:
 		Artefact(std::string& name) : m_Name{name}{};
@@ -59,20 +72,24 @@ struct Artefact
 
 class BuildTable
 {
+	public:
+		bool m_ErrorFlag = false;
+
 	private:
-		std::map<uint64, Artefact *> m_SortedArtefacts;
+		std::map<std::string, uint64, Artefact *> m_SortedArtefacts;
 		std::unordered_map<std::string, Artefact *> m_Artefacts;
 		std::string m_Compiler;
-
-		bool m_ErrorFlag;
 
 	public:
 		BuildTable() = default;
 		~BuildTable();
 
-		void addArtefact(Artefact *art);
+		void addArtefact(Artefact *arte);
 		void sortArtefactsIntoMap();
 
 		void parseConfiguration(std::string& path);
 		void printContents();
+
+		void buildArtefacts();
+		void compileObject(Artefact *arte);
 };
