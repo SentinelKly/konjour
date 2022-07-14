@@ -60,8 +60,6 @@ struct Artefact
 		std::string m_Name;
 
 		bool m_CppMode = false;
-		uint64 m_Priority = 0;
-
 
 	public:
 		Artefact(std::string& name) : m_Name{name}{};
@@ -76,8 +74,7 @@ class BuildTable
 		bool m_ErrorFlag = false;
 
 	private:
-		std::map<std::string, uint64, Artefact *> m_SortedArtefacts;
-		std::unordered_map<std::string, Artefact *> m_Artefacts;
+		std::vector<Artefact *> m_Artefacts;
 		std::string m_Compiler;
 
 	public:
@@ -85,7 +82,6 @@ class BuildTable
 		~BuildTable();
 
 		void addArtefact(Artefact *arte);
-		void sortArtefactsIntoMap();
 
 		void parseConfiguration(std::string& path);
 		void printContents();

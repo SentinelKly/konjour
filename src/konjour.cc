@@ -11,7 +11,7 @@ static const std::string FIELDS[] =
 void Artefact::print()
 {
 	std::cout 
-	<< "name:         " << m_Name                             << "\n"
+	<< "artefact:     " << m_Name                             << "\n"
 	<< "c standard:   " << m_StringFields[FieldType::C_STD]   << "\n"
 	<< "cxx standard: " << m_StringFields[FieldType::CXX_STD] << "\n"
 	<< "release mode: " << m_StringFields[FieldType::MODE]    << "\n"
@@ -20,49 +20,12 @@ void Artefact::print()
 
 BuildTable::~BuildTable()
 {
-
-
-	m_SortedArtefacts.clear();
-}
-
-int compareArteMap(std::pair<std::string, Artefact *>& a1, std::pair<std::string, Artefact *>& a2)
-{
-	return a1.second->m_Priority < a2.second->m_Priority;
-}
-
-void BuildTable::sortArtefactsIntoMap()
-{
-	for (auto& arte : this->m_Artefacts)
-	{
-		for (auto& i : arte.second->m_VectorFields[FieldType::LIBS])
-		{
-			//m_Artefacts.at(i)->m_Priority += (1 + arte.second->m_Priority);
-
-			for (auto& ii : this->m_Artefacts)
-			{
-				if (!i.compare(ii.first)) m_Artefacts[ii.first]->m_Priority += (1 + arte.second->m_Priority);
-			}
-		}
-	}
-
-	std::vector<std::pair<std::string, Artefact *>> A;
-
-	for (auto& it : m_Artefacts) 
-	{
-		A.push_back(it);
-	}
-
-	std::sort(A.begin(), A.end(), compareArteMap);
-
-	for (auto& i : A)
-	{
-		std::cout << i.first << ": " << i.second->m_Priority << std::endl;
-	}
+	for (auto i : this->m_Artefacts) delete i;
 }
 
 void BuildTable::addArtefact(Artefact *arte)
 {
-	this->m_Artefacts[arte->m_Name] = arte;
+	this->m_Artefacts.push_back(arte);
 }
 
 void BuildTable::parseConfiguration(std::string& path)
@@ -145,7 +108,7 @@ void BuildTable::printContents()
 	std::cout << "--Konjour configuration--\ncompiler: " << this->m_Compiler
 	<< "\n\n--Preparing to summon the following artefacts--\n" << std::endl;
 
-	for (const auto& arte : this->m_Artefacts) arte.second->print();
+	for (const auto& arte : this->m_Artefacts) arte->print();
 }
 
 void BuildTable::buildArtefacts()
@@ -168,7 +131,6 @@ int32 main(int32 argc, char8 **argv)
 
 	if (!table->m_ErrorFlag)
 	{
-		table->sortArtefactsIntoMap();
 		table->printContents();
 		table->buildArtefacts();
 	}
