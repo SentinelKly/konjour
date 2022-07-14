@@ -54,7 +54,7 @@ struct Artefact
 		Artefact(std::string& name) : m_Name{name}{};
 		~Artefact() = default;
 
-		std::string toString();
+		void print();
 };
 
 class BuildTable
@@ -74,4 +74,5 @@ class BuildTable
 		void sortArtefactsIntoMap();
 
 		void parseConfiguration(std::string& path);
+		void printContents();
 };

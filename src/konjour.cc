@@ -20,16 +20,14 @@ void logMessage(LogType type, const std::string& message, ...)
 	std::cout << LOG_LEVELS[(uint8) type] << buffer << std::endl;
 }
 
-std::string Artefact::toString()
+void Artefact::print()
 {
-	char8 buffer[999] = {0};
-
-	sprintf(buffer, "name: %s\nc standard: %s\ncxx standard: %s\n mode: %s\n", 
-	m_StringFields.find(FieldType::C_STD)->second),
-	m_StringFields.find(FieldType::CXX_STD)->second,
-	m_StringFields.find(FieldType::MODE)->second;
-
-	return buffer;
+	std::cout 
+	<< "name:         " << m_Name                             << "\n"
+	<< "c standard:   " << m_StringFields[FieldType::C_STD]   << "\n"
+	<< "cxx standard: " << m_StringFields[FieldType::CXX_STD] << "\n"
+	<< "release mode: " << m_StringFields[FieldType::MODE]    << "\n"
+	<< std::endl;
 }
 
 BuildTable::~BuildTable()
@@ -67,7 +65,7 @@ void BuildTable::parseConfiguration(std::string& path)
 		{
 			std::cerr << toml::format_error("[error] no artefacts are defined!",
 			config.at("artefacts"), "at least one artefact required.") << std::endl;
-			
+
 			this->m_ErrorFlag = true;
 		}
 
@@ -87,16 +85,18 @@ void BuildTable::parseConfiguration(std::string& path)
 			if (arteTable.contains(FIELDS[(uint8) FieldType::INC_PATHS]))
 				art->m_VectorFields[FieldType::INC_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::INC_PATHS]);
 			
-			if (arteTable.contains(FIELDS[(uint8) FieldType::INC_PATHS]))
+			if (arteTable.contains(FIELDS[(uint8) FieldType::LIB_PATHS]))
 				art->m_VectorFields[FieldType::LIB_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIB_PATHS]);
 			
-			art->m_VectorFields[FieldType::SOURCES]   = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::SOURCES]);
+			art->m_VectorFields[FieldType::SOURCES] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::SOURCES]);
 
-			if (arteTable.contains(FIELDS[(uint8) FieldType::INC_PATHS]))
+			if (arteTable.contains(FIELDS[(uint8) FieldType::DEFINES]))
 				art->m_VectorFields[FieldType::DEFINES]   = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::DEFINES]);
 
-			if (arteTable.contains(FIELDS[(uint8) FieldType::INC_PATHS]))
+			if (arteTable.contains(FIELDS[(uint8) FieldType::LIBS]))
 				art->m_VectorFields[FieldType::LIBS]      = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIBS]);
+
+			this->addArtefact(art);
 		}
 	}
 	
@@ -107,12 +107,21 @@ void BuildTable::parseConfiguration(std::string& path)
 	}
 }
 
+void BuildTable::printContents()
+{
+	for (auto arte : this->m_Artefacts)
+	{
+		arte.second->print();
+	}
+}
+
 int32 main(int32 argc, char8 **argv)
 {
 	std::string configPath = (argc > 1) ? argv[1] : "./konjour.toml";
 
 	auto table = new BuildTable();
 	table->parseConfiguration(configPath);
+	table->printContents();
 	delete table;
 	return 0;
 }
