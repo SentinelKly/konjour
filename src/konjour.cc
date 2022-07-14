@@ -10,6 +10,11 @@ static const std::string FIELDS[] =
 	"inc_paths", "lib_paths", "sources", "defines", "libs"
 };
 
+static const std::string GCC_CLANG_FLAGS[] =
+{
+	" -O3 -DNDEBUG -s ", " -g ", "-std=", "c", "c++", " -c ", " -Wall -Werror -fPIC ", " -o "
+};
+
 uint8 Artefact::getCompilerFromExt(const std::string& str)
 {
 	std::string ext = str.substr(str.find_last_of(".") + 1);
@@ -77,8 +82,8 @@ void BuildTable::parseConfiguration(std::string& path)
 			arte->m_StringFields[FieldType::C_STD]   = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::C_STD]   , "11");
 			arte->m_StringFields[FieldType::CXX_STD] = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CXX_STD] , "11");
 			arte->m_StringFields[FieldType::OUTPUT]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::OUTPUT]  , "bin");
-			arte->m_StringFields[FieldType::CFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CFLAGS]  , " ");
-			arte->m_StringFields[FieldType::LFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::LFLAGS]  , " ");
+			arte->m_StringFields[FieldType::CFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CFLAGS]  , "");
+			arte->m_StringFields[FieldType::LFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::LFLAGS]  , "");
 			arte->m_StringFields[FieldType::BINARY]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::BINARY]  , "executable");
 			arte->m_StringFields[FieldType::MODE]    = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::MODE]    , "debug");
 
@@ -142,7 +147,6 @@ uint8 BuildTable::compilerToOffset()
 void BuildTable::executeConfig()
 {
 	clock_t start, end;
-	std::cout.precision(2);
 
 	for (const auto& arte : this->m_Artefacts)
 	{
@@ -151,22 +155,34 @@ void BuildTable::executeConfig()
 		end = clock();
 
 		double cpuTime = ((double) (end - start)) / CLOCKS_PER_SEC;
-		std::cout << "Build completed in [" << cpuTime << "] secs.\n" << std::endl;
+
+		std::cout.precision(2);
+		std::cout << "Build completed in [" << std::fixed << cpuTime << "] secs.\n" << std::endl;
 	}
 }
 
 static void compileUnit(ThreadArg *arg)
 {
+	std::string mkdirExec = "mkdir " + arg->m_Arte->m_StringFields[FieldType::OUTPUT] + DIR_SEP + arg->m_Arte->m_Name + OUT_NULL;
+	system(mkdirExec.c_str());
+
 	std::stringstream compileExec;
+	uint8 compilerMode = arg->m_Arte->getCompilerFromExt(arg->m_String);
 
 	std::cout << "compiling '" << arg->m_String << "' from artefact " << arg->m_Arte->m_Name << std::endl;
 
-	compileExec << COMPILERS[arg->m_CompilerIndex + arg->m_Arte->getCompilerFromExt(arg->m_String)]
+	compileExec << COMPILERS[arg->m_CompilerIndex + compilerMode] + " "
 				<< arg->m_Arte->m_StringFields[FieldType::CFLAGS]
-				<< ((!arg->m_Arte->m_StringFields[FieldType::MODE].compare("release")) ? "-O3 -DNDEBUG -s" : "-g");
+				<< ((!arg->m_Arte->m_StringFields[FieldType::MODE].compare("release")) ? GCC_CLANG_FLAGS[RELEASE] : GCC_CLANG_FLAGS[DEBUG])
+				<< GCC_CLANG_FLAGS[STD_PREFIX]
+				<< ((compilerMode) ? GCC_CLANG_FLAGS[STD_CXX] + arg->m_Arte->m_StringFields[FieldType::CXX_STD] : GCC_CLANG_FLAGS[STD_C] + arg->m_Arte->m_StringFields[FieldType::C_STD])
+				<< GCC_CLANG_FLAGS[COMPILE] + ((!arg->m_Arte->m_StringFields[FieldType::BINARY].compare("shared")) ? GCC_CLANG_FLAGS[SHARED] : "")
+				<< arg->m_String
+				<< GCC_CLANG_FLAGS[OUTPUT] 
+				<< arg->m_Arte->m_StringFields[FieldType::OUTPUT]
+				<< "/" + arg->m_Arte->m_Name + "/out" << arg->m_SourceIndex << ".o";
 
-	std::cout << compileExec.str() << std::endl;
-
+	
 	delete arg;
 }
 
@@ -177,7 +193,7 @@ void BuildTable::buildArtefact(Artefact *arte)
 
 	for (const auto& i : arte->m_VectorFields[FieldType::SOURCES])
 	{
-		auto args = new ThreadArg(arte, i, compilerToOffset());
+		auto args = new ThreadArg(arte, i, compilerToOffset(), index++);
 		threadPool.push_back(std::thread(compileUnit, args));
 	}
 

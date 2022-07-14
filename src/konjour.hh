@@ -55,6 +55,11 @@ enum class FieldType: uint8
 	INC_PATHS, LIB_PATHS, SOURCES, DEFINES, LIBS
 };
 
+enum FlagType
+{
+	RELEASE, DEBUG, STD_PREFIX, STD_C, STD_CXX, COMPILE, SHARED, OUTPUT  
+};
+
 struct Artefact
 {
 	public:
@@ -78,9 +83,11 @@ struct ThreadArg
 		const std::string& m_String;
 		Artefact *m_Arte;
 		uint8 m_CompilerIndex;
+		uint64 m_SourceIndex;
 		
 	public:
-		inline ThreadArg(Artefact *arg1, const std::string& arg2, uint8 arg3) : m_Arte{arg1}, m_String{arg2}, m_CompilerIndex{arg3}{};
+		inline ThreadArg(Artefact *arg1, const std::string& arg2, uint8 arg3, uint64 arg4) 
+			: m_Arte{arg1}, m_String{arg2}, m_CompilerIndex{arg3}, m_SourceIndex{arg4}{};
 };
 
 class BuildTable
