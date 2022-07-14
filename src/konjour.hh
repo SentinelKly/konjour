@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <ctime>
 #include <map>
 
 #include "../vendor/toml.hpp"
@@ -19,6 +20,8 @@ using uint32 = unsigned int;
 using uint64 = unsigned long long;
 
 using char8  = char;
+
+#define INVALID_ENUM 0xFF
 
 #if defined(_WIN64)
 	#define SO_EXT   "dll"
@@ -65,7 +68,19 @@ struct Artefact
 		Artefact(std::string& name) : m_Name{name}{};
 		~Artefact() = default;
 
+		uint8 getCompilerFromExt(const std::string& str);
 		void print();
+};
+
+struct ThreadArg
+{
+	public:
+		const std::string& m_String;
+		Artefact *m_Arte;
+		uint8 m_CompilerIndex;
+		
+	public:
+		inline ThreadArg(Artefact *arg1, const std::string& arg2, uint8 arg3) : m_Arte{arg1}, m_String{arg2}, m_CompilerIndex{arg3}{};
 };
 
 class BuildTable
@@ -86,6 +101,8 @@ class BuildTable
 		void parseConfiguration(std::string& path);
 		void printContents();
 
-		void buildArtefacts();
-		void compileObject(Artefact *arte);
+		uint8 compilerToOffset();
+
+		void executeConfig();
+		void buildArtefact(Artefact *arte);
 };

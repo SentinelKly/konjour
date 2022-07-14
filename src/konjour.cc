@@ -1,12 +1,26 @@
 #include "konjour.hh"
 
 static const std::string COMPILERS[]  = {"gcc", "g++", "clang", "clang++"};
+static const std::string CPP_EXTS[]   = {"cpp", "cc", "cxx", "c++", "C"};
+static const std::string C_EXTS[]     = {"c", "s", "S", "asm"};
 
 static const std::string FIELDS[] = 
 {
 	"c_std", "cxx_std", "output", "cflags", "lflags", "binary", "mode",
 	"inc_paths", "lib_paths", "sources", "defines", "libs"
 };
+
+uint8 Artefact::getCompilerFromExt(const std::string& str)
+{
+	std::string ext = str.substr(str.find_last_of(".") + 1);
+	uint8 result = INVALID_ENUM;
+
+	for (auto token : CPP_EXTS) if (!ext.compare(token)) result = 1;
+	for (auto token : C_EXTS)   if (!ext.compare(token)) result = 0;
+	
+	if (result < INVALID_ENUM && !m_CppMode) this->m_CppMode = result;
+	return result;
+}
 
 void Artefact::print()
 {
@@ -36,6 +50,15 @@ void BuildTable::parseConfiguration(std::string& path)
 	{
 		auto config = toml::parse(path);
 		this->m_Compiler = toml::find_or<std::string>(config, "KONJOUR_COMPILER", "gcc");
+
+		if (this->m_Compiler.compare("gcc") && this->m_Compiler.compare("clang"))
+		{
+			std::cerr << toml::format_error("[error] unsupported compiler",
+			config.at("KONJOUR_COMPILER"), "currently supports 'gcc' and 'clang'") << std::endl;
+
+			this->m_ErrorFlag = true;
+		}
+
 		std::vector<std::string> artefactList = toml::find<std::vector<std::string>>(config, "artefacts");
 
 		if (artefactList.size() < 1) 
@@ -54,8 +77,8 @@ void BuildTable::parseConfiguration(std::string& path)
 			arte->m_StringFields[FieldType::C_STD]   = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::C_STD]   , "11");
 			arte->m_StringFields[FieldType::CXX_STD] = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CXX_STD] , "11");
 			arte->m_StringFields[FieldType::OUTPUT]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::OUTPUT]  , "bin");
-			arte->m_StringFields[FieldType::CFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CFLAGS]  , "");
-			arte->m_StringFields[FieldType::LFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::LFLAGS]  , "");
+			arte->m_StringFields[FieldType::CFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::CFLAGS]  , " ");
+			arte->m_StringFields[FieldType::LFLAGS]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::LFLAGS]  , " ");
 			arte->m_StringFields[FieldType::BINARY]  = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::BINARY]  , "executable");
 			arte->m_StringFields[FieldType::MODE]    = toml::find_or<std::string>(arteTable, FIELDS[(uint8) FieldType::MODE]    , "debug");
 
@@ -111,14 +134,54 @@ void BuildTable::printContents()
 	for (const auto& arte : this->m_Artefacts) arte->print();
 }
 
-void BuildTable::buildArtefacts()
+uint8 BuildTable::compilerToOffset()
 {
-
+	return (!m_Compiler.compare("clang") ? 2 : 0);
 }
 
-void BuildTable::compileObject(Artefact *arte)
+void BuildTable::executeConfig()
 {
+	clock_t start, end;
+	std::cout.precision(2);
 
+	for (const auto& arte : this->m_Artefacts)
+	{
+		start = clock();
+		this->buildArtefact(arte);
+		end = clock();
+
+		double cpuTime = ((double) (end - start)) / CLOCKS_PER_SEC;
+		std::cout << "Build completed in [" << cpuTime << "] secs.\n" << std::endl;
+	}
+}
+
+static void compileUnit(ThreadArg *arg)
+{
+	std::stringstream compileExec;
+
+	std::cout << "compiling '" << arg->m_String << "' from artefact " << arg->m_Arte->m_Name << std::endl;
+
+	compileExec << COMPILERS[arg->m_CompilerIndex + arg->m_Arte->getCompilerFromExt(arg->m_String)]
+				<< arg->m_Arte->m_StringFields[FieldType::CFLAGS]
+				<< ((!arg->m_Arte->m_StringFields[FieldType::MODE].compare("release")) ? "-O3 -DNDEBUG -s" : "-g");
+
+	std::cout << compileExec.str() << std::endl;
+
+	delete arg;
+}
+
+void BuildTable::buildArtefact(Artefact *arte)
+{
+	std::vector<std::thread> threadPool;
+	uint64 index = 0;
+
+	for (const auto& i : arte->m_VectorFields[FieldType::SOURCES])
+	{
+		auto args = new ThreadArg(arte, i, compilerToOffset());
+		threadPool.push_back(std::thread(compileUnit, args));
+	}
+
+	for (auto& thread : threadPool) thread.join();
 }
 
 int32 main(int32 argc, char8 **argv)
@@ -132,7 +195,7 @@ int32 main(int32 argc, char8 **argv)
 	if (!table->m_ErrorFlag)
 	{
 		table->printContents();
-		table->buildArtefacts();
+		table->executeConfig();
 	}
 
 	delete table;
