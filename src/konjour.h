@@ -23,8 +23,8 @@
 #define BIN_SHARED      0x01
 #define BIN_STATIC      0x02
 
-#define MODE_RELEASE    0x00
-#define MODE_DEBUG      0x01
+#define MODE_DEBUG      0x00
+#define MODE_RELEASE    0x01
 
 #define INVALID_ENUM    0xFF
 #define UNSET_ENUM      0x2A
@@ -188,9 +188,6 @@ uint8_t resolve_artefact_binary(uint8_t *binary);
 uint8_t resolve_artefact_mode(uint8_t *mode);
 uint8_t resolve_compiler(uint8_t *compiler);
 
-const uint8_t *artefact_binary_to_string(uint8_t binary);
-const uint8_t *artefact_mode_to_string(uint8_t mode);
-
 artefact_t *new_artefact(uint8_t *name, uint8_t type);
 void delete_artefact(artefact_t *art);
 void print_artefact(artefact_t *art, bool verbose);
@@ -201,6 +198,8 @@ void print_artefact(artefact_t *art, bool verbose);
 */
 void print_out_table(build_table_t *table);
 void build_table_artefacts(build_table_t *table);
+void build_artefact(artefact_t *art);
+void *compile_object(void *vparg);
 
 /*=======================================
  *              UTILITIES
