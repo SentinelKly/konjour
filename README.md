@@ -36,4 +36,3 @@ That will then build the proper and release ready konjour build.
 - [ ] Easier to read output
 - [ ] Pre-compiled header support
 - [ ] Support for MSVC
-- [ ] Artefact sorted building
