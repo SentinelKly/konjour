@@ -187,7 +187,7 @@ static void compileUnit(ThreadArg *arg)
 				<< arg->m_Arte->m_StringFields[FieldType::OUTPUT]
 				<< "/" + arg->m_Arte->m_Name + "/out" << arg->m_SourceIndex << ".o";
 
-	std::cout << compileExec.str() << std::endl;
+	//std::cout << compileExec.str() << std::endl;
 	std::string compileExecStr = compileExec.str();
 	system(compileExecStr.c_str());
 	delete arg;
@@ -240,7 +240,7 @@ void BuildTable::buildArtefact(Artefact *arte)
 					<< GCC_CLANG_FLAGS[OUTPUT] + arte->m_StringFields[FieldType::OUTPUT] + "/" + arte->m_Name + "." + EX_EXT;
 	}
 	
-	std::cout << compileExec.str() << std::endl;
+	//std::cout << compileExec.str() << std::endl;
 	std::string compileExecStr = compileExec.str();
 	system(compileExecStr.c_str());
 
