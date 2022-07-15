@@ -12,7 +12,8 @@ static const std::string FIELDS[] =
 
 static const std::string GCC_CLANG_FLAGS[] =
 {
-	" -O3 -DNDEBUG -s ", " -g ", "-std=", "c", "c++", " -c ", " -Wall -Werror -fPIC ", " -o "
+	" -O3 -DNDEBUG -s ", " -g ", "-std=", "c", "c++", " -c ", " -Wall -Werror -fPIC ", " -o ",
+	" ar rcs ", " -shared ", " -D", " -I", " -L", " -l"
 };
 
 uint8 Artefact::getCompilerFromExt(const std::string& str)
@@ -172,8 +173,12 @@ static void compileUnit(ThreadArg *arg)
 	std::cout << "compiling '" << arg->m_String << "' from artefact " << arg->m_Arte->m_Name << std::endl;
 
 	compileExec << COMPILERS[arg->m_CompilerIndex + compilerMode] + " "
-				<< arg->m_Arte->m_StringFields[FieldType::CFLAGS]
-				<< ((!arg->m_Arte->m_StringFields[FieldType::MODE].compare("release")) ? GCC_CLANG_FLAGS[RELEASE] : GCC_CLANG_FLAGS[DEBUG])
+				<< arg->m_Arte->m_StringFields[FieldType::CFLAGS];
+	
+	for (auto i : arg->m_Arte->m_VectorFields[FieldType::INC_PATHS]) compileExec << GCC_CLANG_FLAGS[INC_PREFIX] << i << " ";
+	for (auto i : arg->m_Arte->m_VectorFields[FieldType::DEFINES]) compileExec << GCC_CLANG_FLAGS[DEFINE_PREFIX] << i << " ";
+
+	compileExec	<< ((!arg->m_Arte->m_StringFields[FieldType::MODE].compare("release")) ? GCC_CLANG_FLAGS[RELEASE] : GCC_CLANG_FLAGS[DEBUG])
 				<< GCC_CLANG_FLAGS[STD_PREFIX]
 				<< ((compilerMode) ? GCC_CLANG_FLAGS[STD_CXX] + arg->m_Arte->m_StringFields[FieldType::CXX_STD] : GCC_CLANG_FLAGS[STD_C] + arg->m_Arte->m_StringFields[FieldType::C_STD])
 				<< GCC_CLANG_FLAGS[COMPILE] + ((!arg->m_Arte->m_StringFields[FieldType::BINARY].compare("shared")) ? GCC_CLANG_FLAGS[SHARED] : "")
@@ -182,13 +187,17 @@ static void compileUnit(ThreadArg *arg)
 				<< arg->m_Arte->m_StringFields[FieldType::OUTPUT]
 				<< "/" + arg->m_Arte->m_Name + "/out" << arg->m_SourceIndex << ".o";
 
-	
+	std::cout << compileExec.str() << std::endl;
+	std::string compileExecStr = compileExec.str();
+	system(compileExecStr.c_str());
 	delete arg;
 }
 
 void BuildTable::buildArtefact(Artefact *arte)
 {
+	std::stringstream compileExec, libExpr, objExpr;
 	std::vector<std::thread> threadPool;
+
 	uint64 index = 0;
 
 	for (const auto& i : arte->m_VectorFields[FieldType::SOURCES])
@@ -198,6 +207,45 @@ void BuildTable::buildArtefact(Artefact *arte)
 	}
 
 	for (auto& thread : threadPool) thread.join();
+	threadPool.clear();
+
+	for (const auto& i : arte->m_VectorFields[FieldType::LIB_PATHS]) libExpr << GCC_CLANG_FLAGS[LIB_PATH_PREFIX] << i << " ";
+	for (const auto& i : arte->m_VectorFields[FieldType::LIBS]) libExpr << GCC_CLANG_FLAGS[LIB_PREFIX] << i << " ";
+	for (uint64 i = 0; i < index; i++) objExpr << arte->m_StringFields[FieldType::OUTPUT] << "/" << arte->m_Name << "/out" << i << ".o" << " ";
+
+	if (!arte->m_StringFields[FieldType::BINARY].compare("static"))
+	{
+		compileExec << GCC_CLANG_FLAGS[STATIC] + " "
+					<< arte->m_StringFields[FieldType::OUTPUT] + "/lib" + arte->m_Name + ".a "
+					<< libExpr.str()
+					<< objExpr.str();
+	}
+
+	else if (!arte->m_StringFields[FieldType::BINARY].compare("shared"))
+	{
+		compileExec << COMPILERS[arte->m_CppMode + this->compilerToOffset()] + " "
+					<< arte->m_StringFields[FieldType::LFLAGS]
+					<< GCC_CLANG_FLAGS[SHARED_LINK]
+					<< libExpr.str()
+					<< objExpr.str()
+					<< GCC_CLANG_FLAGS[OUTPUT] + arte->m_StringFields[FieldType::OUTPUT] + "/lib" + arte->m_Name + "." + SO_EXT;
+	}
+
+	else if (!arte->m_StringFields[FieldType::BINARY].compare("executable"))
+	{
+		compileExec << COMPILERS[arte->m_CppMode + this->compilerToOffset()] + " "
+					<< arte->m_StringFields[FieldType::LFLAGS]
+					<< libExpr.str()
+					<< objExpr.str()
+					<< GCC_CLANG_FLAGS[OUTPUT] + arte->m_StringFields[FieldType::OUTPUT] + "/" + arte->m_Name + "." + EX_EXT;
+	}
+	
+	std::cout << compileExec.str() << std::endl;
+	std::string compileExecStr = compileExec.str();
+	system(compileExecStr.c_str());
+
+	compileExecStr = RM_EXEC + arte->m_StringFields[FieldType::OUTPUT] + DIR_SEP + arte->m_Name;
+	system(compileExecStr.c_str());
 }
 
 int32 main(int32 argc, char8 **argv)

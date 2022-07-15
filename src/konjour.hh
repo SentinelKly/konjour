@@ -26,17 +26,17 @@ using char8  = char;
 #if defined(_WIN64)
 	#define SO_EXT   "dll"
 	#define EX_EXT   "exe"
-	#define RM_EXEC  "rmdir /Q /s"
+	#define RM_EXEC  "rmdir /Q /s "
 	#define CLR_EXEC "cls"
 	#define DIR_SEP  "\\"
-	#define OUT_NULL "> nul"
+	#define OUT_NULL " > nul"
 #elif defined(_APPLE_)
 	#define SO_EXT   "dylib"
 	#define EX_EXT   ""
 	#define RM_EXEC  "rm -rf ./"
 	#define CLR_EXEC "clear"
 	#define DIR_SEP  "/"
-	#define OUT_NULL "> /dev/null"
+	#define OUT_NULL " > /dev/null"
 #else
 	#define SO_EXT   "so"
 	#define EX_EXT   ""
@@ -57,7 +57,8 @@ enum class FieldType: uint8
 
 enum FlagType
 {
-	RELEASE, DEBUG, STD_PREFIX, STD_C, STD_CXX, COMPILE, SHARED, OUTPUT  
+	RELEASE, DEBUG, STD_PREFIX, STD_C, STD_CXX, COMPILE, SHARED, OUTPUT,
+	STATIC, SHARED_LINK, DEFINE_PREFIX, INC_PREFIX, LIB_PATH_PREFIX, LIB_PREFIX
 };
 
 struct Artefact

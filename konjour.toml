@@ -1,17 +1,11 @@
-KONJOUR_COMPILER    = "gcc"
+KONJOUR_COMPILER = "gcc"
 
-artefacts = ["konjour", "lib1"]
+artefacts = ["konjour"]
 
 [konjour]
-	c_std   = "11"
-	cxx_std = "14"
+	cxx_std = "11"
 	binary  = "executable"
 	mode    = "release"
 	output  = "bin"
 	
-	sources = ["src/konjour.c", "src/cfg_parser.c"]
-	libs    = ["lib1"]
-
-[lib1]
-	sources = ["src/fake.cpp"]
-	libs    = ["lib2"]
+	sources = ["src/konjour.cc"]
