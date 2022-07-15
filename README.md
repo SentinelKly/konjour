@@ -26,24 +26,14 @@ build.bat
 This will compile and build a very quick debug build of konjour. You can use this debug build to
 then bootstrap itself using the konjour.cfg:
 ```sh
-./konjour-dbg konjour.cfg
+./konjour-dbg konjour.toml
 ```
 That will then build the proper and release ready konjour build.
 
 ## Beta Roadmap
 - [X] Multithreaded compilation
-- [ ] More bug fixes and parsing sanitisation
 - [ ] Avoid rebuilding unchanged targets
 - [ ] Easier to read output
 - [ ] Pre-compiled header support
-- [ ] Configurable konjour settings
-- [ ] Allow for field concatenation
-- [ ] Cmake interoperability 
 - [ ] Support for MSVC
-- [ ] Basic meta-scripting
 - [ ] Artefact sorted building
-- [ ] Support for custom variables
-
-## Current Issues
-- [ ] 'Dodgy' code fixes
-- [ ] Certain syntax errors go unnoticed 
