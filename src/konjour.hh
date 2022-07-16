@@ -86,6 +86,13 @@ struct ThreadArg
 			: m_Arte{arg1}, m_String{arg2}, m_CompilerIndex{arg3}, m_SourceIndex{arg4}, m_UnitType{arg5}{};
 };
 
+class ArteCache
+{
+	public:
+		ArteCache() = default;
+		~ArteCache();
+};
+
 class BuildTable
 {
 	public:
