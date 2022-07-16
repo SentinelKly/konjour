@@ -3,6 +3,11 @@
 /.vscode
 /.vs
 
+# Build directories
+/bin
+/build
+/out
+
 # Compiled Object files
 *.slo
 *.lo

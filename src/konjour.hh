@@ -37,7 +37,7 @@ using char8  = char;
 	#define RM_EXEC  "rm -rf ./"
 	#define CLR_EXEC "clear"
 	#define DIR_SEP  "/"
-	#define OUT_NULL "> /dev/null"
+	#define OUT_NULL " > /dev/null"
 #endif
 
 enum class FieldType: uint8
@@ -89,8 +89,10 @@ struct ThreadArg
 class ArteCache
 {
 	public:
-		ArteCache() = default;
+		ArteCache(Artefact *arte, std::string& path);
 		~ArteCache();
+
+		bool rebuildNeeded(std::string& source);
 };
 
 class BuildTable
