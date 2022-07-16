@@ -1,13 +1,5 @@
 #pragma once
-
-#include <iostream>
-#include <vector>
-#include <string>
-#include <thread>
-#include <ctime>
-#include <map>
-
-#include "../vendor/toml.hpp"
+#include "pch.hh"
 
 using int8   = signed char;
 using int16  = signed short;
@@ -21,6 +13,8 @@ using uint64 = unsigned long long;
 
 using char8  = char;
 
+#define UNIT_SOURCE  0x00
+#define UNIT_HEADER  0x01
 #define INVALID_ENUM 0xFF
 
 #if defined(_WIN64)
@@ -52,7 +46,7 @@ enum class FieldType: uint8
 	C_STD, CXX_STD, OUTPUT, CFLAGS, LFLAGS, BINARY, MODE,
 
 	//vector<std::string> fields
-	INC_PATHS, LIB_PATHS, SOURCES, DEFINES, LIBS
+	INC_PATHS, LIB_PATHS, SOURCES, DEFINES, LIBS, PC_HEADERS
 };
 
 enum FlagType
@@ -85,10 +79,11 @@ struct ThreadArg
 		Artefact *m_Arte;
 		uint8 m_CompilerIndex;
 		uint64 m_SourceIndex;
+		uint8 m_UnitType;
 		
 	public:
-		inline ThreadArg(Artefact *arg1, const std::string& arg2, uint8 arg3, uint64 arg4) 
-			: m_Arte{arg1}, m_String{arg2}, m_CompilerIndex{arg3}, m_SourceIndex{arg4}{};
+		inline ThreadArg(Artefact *arg1, const std::string& arg2, uint8 arg3, uint64 arg4, uint8 arg5) 
+			: m_Arte{arg1}, m_String{arg2}, m_CompilerIndex{arg3}, m_SourceIndex{arg4}, m_UnitType{arg5}{};
 };
 
 class BuildTable

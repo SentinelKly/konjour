@@ -3,9 +3,11 @@ KONJOUR_COMPILER = "gcc"
 artefacts = ["konjour"]
 
 [konjour]
-	cxx_std = "11"
-	binary  = "executable"
-	mode    = "release"
-	output  = "bin"
-	
-	sources = ["src/konjour.cc"]
+	cxx_std    = "11"
+	binary     = "executable"
+	mode       = "release"
+	output     = "bin"
+
+	inc_paths  = ["vendor"]
+	pc_headers = ["src/pch.hh"]
+	sources    = ["src/konjour.cc"]
