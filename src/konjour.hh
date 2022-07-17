@@ -119,7 +119,7 @@ class BuildTable
 		void addArtefact(Artefact *arte);
 
 		void parseConfiguration(std::string& path);
-		void printContents();
+		void printContents() const;
 
 		uint8 compilerToOffset();
 

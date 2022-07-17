@@ -41,7 +41,7 @@ void Artefact::print()
 
 ArteCache::ArteCache(Artefact *arte)
 {
-	
+
 }
 
 bool ArteCache::rebuildNeeded(std::string& source, uint8 unitType, uint64 index)
@@ -146,7 +146,7 @@ void BuildTable::parseConfiguration(std::string& path)
 	}
 }
 
-void BuildTable::printContents()
+void BuildTable::printContents() const
 {
 	std::cout << "--Konjour configuration--\ncompiler: " << this->m_Compiler
 	<< "\n\n--Preparing to summon the following artefacts--\n" << std::endl;
