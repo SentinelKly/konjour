@@ -118,22 +118,22 @@ void BuildTable::parseConfiguration(std::string& path)
 				this->m_ErrorFlag = true;
 			}
 
-			arte->m_VectorFields[FieldType::SOURCES] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::SOURCES]);
+			arte->m_VectorFields[FieldType::SOURCES] = toml::find<std::vector<std::string>>       (arteTable, FIELDS[(uint8) FieldType::SOURCES]);
 
 			if (arteTable.contains(FIELDS[(uint8) FieldType::INC_PATHS]))
-				arte->m_VectorFields[FieldType::INC_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::INC_PATHS]);
+				arte->m_VectorFields[FieldType::INC_PATHS] = toml::find<std::vector<std::string>> (arteTable,  FIELDS[(uint8) FieldType::INC_PATHS]);
 			
 			if (arteTable.contains(FIELDS[(uint8) FieldType::LIB_PATHS]))
-				arte->m_VectorFields[FieldType::LIB_PATHS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIB_PATHS]);
+				arte->m_VectorFields[FieldType::LIB_PATHS] = toml::find<std::vector<std::string>> (arteTable,  FIELDS[(uint8) FieldType::LIB_PATHS]);
 
 			if (arteTable.contains(FIELDS[(uint8) FieldType::DEFINES]))
-				arte->m_VectorFields[FieldType::DEFINES] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::DEFINES]);
+				arte->m_VectorFields[FieldType::DEFINES] = toml::find<std::vector<std::string>>   (arteTable,  FIELDS[(uint8) FieldType::DEFINES]);
 
 			if (arteTable.contains(FIELDS[(uint8) FieldType::LIBS]))
-				arte->m_VectorFields[FieldType::LIBS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::LIBS]);
+				arte->m_VectorFields[FieldType::LIBS] = toml::find<std::vector<std::string>>      (arteTable,  FIELDS[(uint8) FieldType::LIBS]);
 
 			if (arteTable.contains(FIELDS[(uint8) FieldType::PC_HEADERS]))
-				arte->m_VectorFields[FieldType::PC_HEADERS] = toml::find<std::vector<std::string>>(arteTable, FIELDS[(uint8) FieldType::PC_HEADERS]);
+				arte->m_VectorFields[FieldType::PC_HEADERS] = toml::find<std::vector<std::string>> (arteTable, FIELDS[(uint8) FieldType::PC_HEADERS]);
 
 			this->addArtefact(arte);
 		}
@@ -187,30 +187,30 @@ static void compileUnit(ThreadArg *arg)
 	std::string mkdirExec = "mkdir " + arg->m_Arte->m_StringFields[FieldType::OUTPUT] + DIR_SEP + arg->m_Arte->m_Name + OUT_NULL;
 	system(mkdirExec.c_str());
 
-	compileExec << COMPILERS[arg->m_CompilerIndex + compilerMode] + " "
+	compileExec 
+		<< COMPILERS[arg->m_CompilerIndex + compilerMode] + " "
 		<< arg->m_Arte->m_StringFields[FieldType::CFLAGS];
 	
 	for (auto i : arg->m_Arte->m_VectorFields[FieldType::INC_PATHS]) compileExec << GCC_CLANG_FLAGS[INC_PREFIX] << i << " ";
 	for (auto i : arg->m_Arte->m_VectorFields[FieldType::DEFINES]) compileExec << GCC_CLANG_FLAGS[DEFINE_PREFIX] << i << " ";
 
-	compileExec	<< ((!arg->m_Arte->m_StringFields[FieldType::MODE].compare("release")) ? GCC_CLANG_FLAGS[RELEASE] : GCC_CLANG_FLAGS[DEBUG])
+	compileExec	
+		<< ((!arg->m_Arte->m_StringFields[FieldType::MODE].compare("release")) ? GCC_CLANG_FLAGS[RELEASE] : GCC_CLANG_FLAGS[DEBUG])
 		<< GCC_CLANG_FLAGS[STD_PREFIX]
 		<< ((compilerMode) ? GCC_CLANG_FLAGS[STD_CXX] + arg->m_Arte->m_StringFields[FieldType::CXX_STD] : GCC_CLANG_FLAGS[STD_C] + arg->m_Arte->m_StringFields[FieldType::C_STD]);
 		
 
-	if (arg->m_UnitType == UNIT_HEADER)
-	{
-		compileExec << " " << arg->m_String;
-	}
+	if (arg->m_UnitType == UNIT_HEADER) compileExec << " " << arg->m_String;
 
 	else
 	{
-		compileExec << GCC_CLANG_FLAGS[COMPILE]
-		<< ((!arg->m_Arte->m_StringFields[FieldType::BINARY].compare("shared")) ? GCC_CLANG_FLAGS[SHARED] : "")
-		<< arg->m_String
-		<< GCC_CLANG_FLAGS[OUTPUT] 
-		<< arg->m_Arte->m_StringFields[FieldType::OUTPUT]
-		<< "/" + arg->m_Arte->m_Name + "/out" << arg->m_SourceIndex << ".o";
+		compileExec 
+			<< GCC_CLANG_FLAGS[COMPILE]
+			<< ((!arg->m_Arte->m_StringFields[FieldType::BINARY].compare("shared")) ? GCC_CLANG_FLAGS[SHARED] : "")
+			<< arg->m_String
+			<< GCC_CLANG_FLAGS[OUTPUT] 
+			<< arg->m_Arte->m_StringFields[FieldType::OUTPUT]
+			<< "/" + arg->m_Arte->m_Name + "/out" << arg->m_SourceIndex << ".o";
 	}
 
 	//std::cout << compileExec.str() << std::endl;
@@ -249,7 +249,8 @@ void BuildTable::buildArtefact(Artefact *arte)
 
 	if (!arte->m_StringFields[FieldType::BINARY].compare("static"))
 	{
-		compileExec << GCC_CLANG_FLAGS[STATIC] + " "
+		compileExec 
+			<< GCC_CLANG_FLAGS[STATIC] + " "
 			<< arte->m_StringFields[FieldType::OUTPUT] + "/lib" + arte->m_Name + ".a "
 			<< libExpr.str()
 			<< objExpr.str();
@@ -257,7 +258,8 @@ void BuildTable::buildArtefact(Artefact *arte)
 
 	else if (!arte->m_StringFields[FieldType::BINARY].compare("shared"))
 	{
-		compileExec << COMPILERS[arte->m_CppMode + this->compilerToOffset()] + " "
+		compileExec 
+			<< COMPILERS[arte->m_CppMode + this->compilerToOffset()] + " "
 			<< arte->m_StringFields[FieldType::LFLAGS]
 			<< GCC_CLANG_FLAGS[SHARED_LINK]
 			<< libExpr.str()
@@ -267,7 +269,8 @@ void BuildTable::buildArtefact(Artefact *arte)
 
 	else if (!arte->m_StringFields[FieldType::BINARY].compare("executable"))
 	{
-		compileExec << COMPILERS[arte->m_CppMode + this->compilerToOffset()] + " "
+		compileExec 
+			<< COMPILERS[arte->m_CppMode + this->compilerToOffset()] + " "
 			<< arte->m_StringFields[FieldType::LFLAGS]
 			<< libExpr.str()
 			<< objExpr.str()
