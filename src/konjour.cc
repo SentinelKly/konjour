@@ -39,6 +39,16 @@ void Artefact::print()
 	<< std::endl;
 }
 
+ArteCache::ArteCache(Artefact *arte)
+{
+	
+}
+
+bool ArteCache::rebuildNeeded(std::string& source, uint8 unitType, uint64 index)
+{
+
+}
+
 BuildTable::~BuildTable()
 {
 	for (auto i : this->m_Artefacts) delete i;

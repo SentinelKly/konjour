@@ -88,11 +88,19 @@ struct ThreadArg
 
 class ArteCache
 {
+	private:
+		Artefact *m_Arte;
+
+	private:
+		std::vector<std::string> m_SourceHashes;
+		std::vector<std::string> m_HeaderHashes;
+		std::string m_ConfigHash;
+
 	public:
-		ArteCache(Artefact *arte, std::string& path);
+		ArteCache(Artefact *arte) : m_Arte{arte}{};
 		~ArteCache();
 
-		bool rebuildNeeded(std::string& source);
+		bool rebuildNeeded(std::string& source, uint8 unitType, uint64 index);
 };
 
 class BuildTable
