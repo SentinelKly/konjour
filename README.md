@@ -34,5 +34,5 @@ That will then build the proper and release ready konjour build.
 - [X] Multithreaded compilation
 - [ ] Avoid rebuilding unchanged targets
 - [ ] Easier to read output
-- [ ] Pre-compiled header support
+- [X] Pre-compiled header support
 - [ ] Support for MSVC
