@@ -97,7 +97,7 @@ class ArteCache
 		std::string m_ConfigHash;
 
 	public:
-		ArteCache(Artefact *arte) : m_Arte{arte}{};
+		ArteCache(Artefact *arte);
 		~ArteCache();
 
 		bool rebuildNeeded(std::string& source, uint8 unitType, uint64 index);

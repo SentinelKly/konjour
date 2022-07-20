@@ -39,14 +39,14 @@ void Artefact::print()
 	<< std::endl;
 }
 
-ArteCache::ArteCache(Artefact *arte)
+ArteCache::ArteCache(Artefact *arte) : m_Arte{arte}
 {
-
+	
 }
 
 bool ArteCache::rebuildNeeded(std::string& source, uint8 unitType, uint64 index)
 {
-
+	return false;
 }
 
 BuildTable::~BuildTable()
