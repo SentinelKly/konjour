@@ -244,7 +244,7 @@ void BuildTable::buildArtefact(Artefact *arte)
 	threadPool.clear();
 
 	for (const auto& i : arte->m_VectorFields[FieldType::LIB_PATHS]) libExpr << GCC_CLANG_FLAGS[LIB_PATH_PREFIX] << i << " ";
-	for (const auto& i : arte->m_VectorFields[FieldType::LIBS]) libExpr << GCC_CLANG_FLAGS[LIB_PREFIX] << i << " ";
+	for (const auto& i : arte->m_VectorFields[FieldType::LIBS])      libExpr << GCC_CLANG_FLAGS[LIB_PREFIX] << i << " ";
 	for (uint64 i = 0; i < index; i++) objExpr << arte->m_StringFields[FieldType::OUTPUT] << "/" << arte->m_Name << "/out" << i << ".o" << " ";
 
 	if (!arte->m_StringFields[FieldType::BINARY].compare("static"))
